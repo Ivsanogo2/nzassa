@@ -1,0 +1,170 @@
+{% extends "nzassa_app/base.html" %}
+{% load static %}
+
+{% block title %}Nzassa School | Accueil{% endblock %}
+
+{% block content %}
+<style>
+    /* Design inspiré de indexvoulu.html */
+    body {
+        font-family: 'Montserrat', sans-serif;
+    }
+
+    .hero {
+        background: linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.6)),
+        url("https://images.unsplash.com/photo-1588072432836-e10032774350");
+        background-size: cover;
+        background-position: center;
+        min-height: 500px;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-hover {
+        transition: all 0.3s ease;
+    }
+
+    .card-hover:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+    }
+
+    .result-card {
+        background: white;
+        padding: 1.5rem;
+        margin-top: 1rem;
+        border-radius: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border: 1px solid #eee;
+        box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+    }
+</style>
+
+<section class="hero">
+    <div class="container mx-auto px-6">
+        <h2 class="text-5xl font-bold mb-4 text-gray-900">Préservons nos langues africaines</h2>
+        <p class="text-xl mb-8 text-gray-700 max-w-2xl">Apprends ta langue maternelle avec l’IA, des jeux et la culture vivante.</p>
+
+        <div class="flex gap-4">
+            <a href="#" class="bg-orange-500 hover:bg-orange-600 text-white px-8 py-3 rounded-lg font-bold transition">
+                Commencer gratuitement
+            </a>
+            <a href="{% url 'ai_coach' %}" class="bg-white border-2 border-orange-500 text-orange-500 px-8 py-3 rounded-lg font-bold hover:bg-orange-50 transition">
+                Coach IA
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="py-20 bg-gray-50">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold text-center mb-12 italic">Apprendre et Jouer</h2>
+
+        <div class="grid md:grid-cols-3 gap-8">
+            <a href="{% url 'apprendre_ma_langue' %}" class="card-hover bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                <img src="https://images.unsplash.com/photo-1584697964403-6e0b0cba9b4c" class="w-full h-48 object-cover" alt="Cours">
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-orange-600">Apprendre ma langue</h3>
+                    <p class="text-gray-600">Leçons interactives avec IA.</p>
+                </div>
+            </a>
+
+            <a href="{% url 'jeu' langue='bete' %}" class="card-hover bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                <img src="https://images.unsplash.com/photo-1603575448369-0c1b9d3f4042" class="w-full h-48 object-cover" alt="Jeux">
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-orange-600">Jeux éducatifs</h3>
+                    <p class="text-gray-600">Quiz et mini-jeux culturels.</p>
+                </div>
+            </a>
+
+            <a href="{% url 'vr' %}" class="card-hover bg-white rounded-2xl overflow-hidden shadow-sm border border-gray-100">
+                <img src="https://images.unsplash.com/photo-1593642532400-2682810df593" class="w-full h-48 object-cover" alt="VR">
+                <div class="p-6">
+                    <h3 class="font-bold text-xl mb-2 text-orange-600">Réalité Virtuelle</h3>
+                    <p class="text-gray-600">Explore nos villages en 3D.</p>
+                </div>
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="py-16 bg-white">
+    <div class="container mx-auto px-6">
+        <div class="max-w-3xl mx-auto bg-orange-50 rounded-3xl p-10 shadow-inner">
+            <h2 class="text-2xl font-bold mb-6 text-center">Dictionnaire interactif</h2>
+            <input type="text" id="search-input" 
+                   class="w-full p-4 rounded-xl border-none shadow-md focus:ring-2 focus:ring-orange-500" 
+                   placeholder="Tape un mot en français (ex: Bonjour)...">
+            
+            <div id="results-container" class="mt-8 text-center text-gray-400 italic">
+                Les résultats apparaîtront ici...
+            </div>
+        </div>
+    </div>
+</section>
+
+{% if discovered_vocabulary %}
+<section class="py-16 bg-gray-50 border-t border-gray-200">
+    <div class="container mx-auto px-6">
+        <h2 class="text-xl font-bold mb-6">Mots récemment ajoutés par l'IA</h2>
+        <div class="flex flex-wrap gap-4">
+            {% for item in discovered_vocabulary %}
+            <div class="bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200 flex items-center gap-2">
+                <span class="w-2 h-2 bg-green-500 rounded-full"></span>
+                <span class="font-medium text-gray-800">{{ item.word }}</span>
+                <span class="text-xs text-gray-400 uppercase">({{ item.language }})</span>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const input = document.getElementById('search-input');
+    const container = document.getElementById('results-container');
+
+    function parler(texte) {
+        const synthese = window.speechSynthesis;
+        const enonce = new SpeechSynthesisUtterance(texte);
+        enonce.lang = 'fr-FR';
+        synthese.speak(enonce);
+    }
+
+    input.addEventListener('input', (e) => {
+        const q = e.target.value.trim();
+        if (q.length > 1) {
+            fetch(`/chercher/?q=${encodeURIComponent(q)}`)
+                .then(r => r.json())
+                .then(json => {
+                    container.innerHTML = '';
+                    if (!json.data || json.data.length === 0) {
+                        container.innerHTML = 'Aucun résultat.';
+                        return;
+                    }
+                    json.data.forEach(item => {
+                        container.innerHTML += `
+                            <div class="result-card">
+                                <div class="text-left">
+                                    <span class="text-orange-500 text-xs font-bold uppercase">${item.langue}</span><br>
+                                    <span class="text-lg font-bold">${item.origine}</span>
+                                    <span class="mx-2">→</span>
+                                    <span class="text-lg text-green-600 font-bold">${item.traduction}</span>
+                                </div>
+                                <button onclick="parler('${item.traduction}')" class="bg-orange-500 text-white p-3 rounded-full hover:bg-orange-600">
+                                    <i class="ri-volume-up-line"></i> Audio
+                                </button>
+                            </div>`;
+                    });
+                });
+        } else {
+            container.innerHTML = 'Les résultats apparaîtront ici...';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,528 @@
+{% extends "nzassa_app/base.html" %}
+{% load static %}
+
+{% block title %}Langue des Signes | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .sign-shell {
+        display: grid;
+        gap: 24px;
+    }
+
+    .sign-hero,
+    .sign-card {
+        padding: 28px;
+    }
+
+    .sign-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+        gap: 18px;
+        align-items: start;
+    }
+
+    .sign-hero h1 {
+        margin: 8px 0 12px;
+        font-size: clamp(2rem, 4vw, 3.4rem);
+    }
+
+    .sign-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+        gap: 18px;
+    }
+
+    .camera-shell {
+        position: relative;
+        border-radius: 26px;
+        overflow: hidden;
+        background: linear-gradient(180deg, #04141b, #0b2831);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        min-height: 460px;
+    }
+
+    #canvas-container {
+        position: relative;
+        width: 100%;
+        min-height: 460px;
+    }
+
+    canvas {
+        width: 100%;
+        height: auto;
+        display: block;
+        transform: scaleX(-1);
+    }
+
+    .camera-overlay {
+        position: absolute;
+        left: 18px;
+        right: 18px;
+        top: 18px;
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        flex-wrap: wrap;
+        z-index: 3;
+    }
+
+    .chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px;
+        border-radius: 999px;
+        background: rgba(5, 19, 27, 0.72);
+        color: #d7fff6;
+        border: 1px solid rgba(0, 255, 204, 0.18);
+        backdrop-filter: blur(10px);
+        font-size: 0.9rem;
+    }
+
+    .phrase-card,
+    .learning-panel,
+    .library-card,
+    .mission-card,
+    .feedback-card {
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+        padding: 20px;
+    }
+
+    .phrase-card {
+        margin-top: 18px;
+    }
+
+    .sentence-text {
+        min-height: 78px;
+        padding: 16px;
+        border-radius: 18px;
+        background: #0e1d23;
+        color: #7bffe0;
+        font-size: 1.25rem;
+        line-height: 1.6;
+        border: 1px solid rgba(123, 255, 224, 0.2);
+    }
+
+    .sidebar-stack {
+        display: grid;
+        gap: 16px;
+    }
+
+    .status-badge {
+        font-size: 3rem;
+        font-weight: 900;
+        line-height: 1;
+        color: var(--lagoon);
+    }
+
+    .mission-list,
+    .library-list {
+        list-style: none;
+        padding: 0;
+        margin: 14px 0 0;
+        display: grid;
+        gap: 10px;
+    }
+
+    .mission-list li,
+    .library-list button {
+        border-radius: 16px;
+        padding: 12px 14px;
+        background: rgba(255, 255, 255, 0.82);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+    }
+
+    .library-list button {
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+        font: inherit;
+    }
+
+    .library-list button.active {
+        background: linear-gradient(135deg, rgba(31, 107, 79, 0.16), rgba(244, 185, 66, 0.2));
+        border-color: rgba(31, 107, 79, 0.2);
+    }
+
+    .control-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-top: 16px;
+    }
+
+    .action-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 12px 16px;
+        cursor: pointer;
+        font-weight: 700;
+    }
+
+    .action-btn.primary {
+        background: linear-gradient(135deg, var(--forest), #2f936b);
+        color: white;
+    }
+
+    .action-btn.secondary {
+        background: rgba(13, 59, 102, 0.08);
+        color: var(--lagoon);
+    }
+
+    .search-input {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(20, 33, 29, 0.12);
+        background: rgba(255, 255, 255, 0.94);
+        font-size: 1rem;
+    }
+
+    .feedback-card.success {
+        background: rgba(31, 107, 79, 0.12);
+        border-color: rgba(31, 107, 79, 0.18);
+    }
+
+    .feedback-card.warning {
+        background: rgba(244, 185, 66, 0.14);
+        border-color: rgba(201, 106, 45, 0.2);
+    }
+
+    @media (max-width: 980px) {
+        .sign-hero,
+        .sign-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="sign-shell">
+    <section class="surface-card sign-hero">
+        <div>
+            <p style="margin:0;color:var(--forest);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">
+                Module accessibilite et inclusion
+            </p>
+            <h1>Nzassa Signes Studio</h1>
+            <p style="max-width:65ch;line-height:1.8;">
+                Cette experience ne se limite plus a detecter un geste. Elle sert maintenant de module
+                d'apprentissage avec objectif du jour, phrase construite, dictionnaire de gestes,
+                audio et feedback temps reel.
+            </p>
+        </div>
+        <div class="learning-panel">
+            <h3 style="margin-top:0;">Objectif du jour</h3>
+            <p id="today-goal" style="margin-bottom:10px;">Reussir trois gestes: BONJOUR, MANGER et BOIRE.</p>
+            <div class="chip">Progression signes: <strong id="goal-progress">0/3</strong></div>
+            <div class="chip" style="margin-top:10px;">Mode: entrainement guide</div>
+        </div>
+    </section>
+
+    <section class="sign-grid">
+        <div>
+            <div class="camera-shell">
+                <div class="camera-overlay">
+                    <div class="chip">Camera active</div>
+                    <div class="chip">Detection stabilisee: <span id="stability-label">en attente</span></div>
+                </div>
+                <div id="canvas-container">
+                    <video id="input_video" style="display:none;"></video>
+                    <canvas id="output_canvas" width="960" height="720"></canvas>
+                </div>
+            </div>
+
+            <div class="phrase-card">
+                <small style="color:rgba(20,33,29,0.6);font-weight:700;">PHRASE CONSTRUITE</small>
+                <div id="sentence-text" class="sentence-text"></div>
+                <div class="control-row">
+                    <button class="action-btn primary" onclick="speakSentence()">Lire la phrase</button>
+                    <button class="action-btn secondary" onclick="clearSentence()">Effacer</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="sidebar-stack">
+            <div class="mission-card">
+                <small style="color:rgba(20,33,29,0.6);font-weight:700;">SIGNE DETECTE</small>
+                <div id="current-letter" class="status-badge">...</div>
+                <p id="detected-description" style="margin-bottom:0;line-height:1.7;">
+                    Positionnez votre main face a la camera pour commencer l'analyse.
+                </p>
+            </div>
+
+            <div id="feedback-box" class="feedback-card warning">
+                <h3 style="margin-top:0;">Retour intelligent</h3>
+                <p id="feedback-text" style="margin-bottom:0;">
+                    Gardez la main stable pendant une seconde pour valider un geste.
+                </p>
+            </div>
+
+            <div class="library-card">
+                <h3 style="margin-top:0;">Bibliotheque de gestes</h3>
+                <input type="text" id="search-word" class="search-input" placeholder="Chercher un mot ou un geste..." oninput="showSignHelp()">
+                <p id="sign-demo" style="color:var(--lagoon);line-height:1.7;">Tapez un mot pour voir la consigne de geste.</p>
+                <div id="selected-sign-meta" class="chip" style="margin-top:12px;">Aucun geste selectionne</div>
+                <div class="library-list" id="sign-library"></div>
+            </div>
+
+            <div class="mission-card">
+                <h3 style="margin-top:0;">Mission d'apprentissage</h3>
+                <ul class="mission-list">
+                    <li>1. Ouvrir la main pour BONJOUR</li>
+                    <li>2. Faire un pincement pour MANGER</li>
+                    <li>3. Former un C pour BOIRE</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/drawing_utils"></script>
+
+<script>
+    const signLibrary = [
+        {
+            key: "BONJOUR",
+            aliases: ["bonjour", "salut"],
+            description: "Main ouverte, paume visible, puis petit mouvement vers l'avant.",
+            practiceTip: "Gardez les doigts allonges et la paume bien visible.",
+            lessonHint: "Utilisez ce geste pour commencer une interaction."
+        },
+        {
+            key: "MANGER",
+            aliases: ["manger", "repas"],
+            description: "Pincement des doigts vers la bouche.",
+            practiceTip: "Rapprochez l'index et le pouce, puis dirigez la main vers la bouche.",
+            lessonHint: "Le prototype detecte ce geste avec un pincement net."
+        },
+        {
+            key: "BOIRE",
+            aliases: ["boire", "eau"],
+            description: "Former un C avec la main puis l'approcher de la bouche.",
+            practiceTip: "Conservez une forme de tasse avec la main.",
+            lessonHint: "Le pouce et les doigts doivent dessiner une courbe."
+        },
+        {
+            key: "A",
+            aliases: ["a", "lettre a"],
+            description: "Poing ferme avec le pouce replie sur le cote.",
+            practiceTip: "Repliez tous les doigts sans contracter toute la main.",
+            lessonHint: "Permet de commencer l'alphabet signe."
+        },
+        {
+            key: "B",
+            aliases: ["b", "lettre b"],
+            description: "Quatre doigts tendus, pouce replie vers la paume.",
+            practiceTip: "Essayez de garder les quatre doigts paralleles.",
+            lessonHint: "Bonne base pour entrainer l'alphabet signe."
+        },
+        {
+            key: "ESPACE",
+            aliases: ["espace", "pause"],
+            description: "Main totalement ouverte pour indiquer une separation.",
+            practiceTip: "Etirez tous les doigts pour une forme claire.",
+            lessonHint: "Utile pour construire une phrase mot par mot."
+        }
+    ];
+
+    const trainingTargets = ["BONJOUR", "MANGER", "BOIRE"];
+    const achievedTargets = new Set();
+
+    const videoElement = document.getElementById("input_video");
+    const canvasElement = document.getElementById("output_canvas");
+    const canvasCtx = canvasElement.getContext("2d");
+    const letterDisplay = document.getElementById("current-letter");
+    const sentenceDisplay = document.getElementById("sentence-text");
+    const detectedDescription = document.getElementById("detected-description");
+    const stabilityLabel = document.getElementById("stability-label");
+    const signDemo = document.getElementById("sign-demo");
+    const signLibraryContainer = document.getElementById("sign-library");
+    const selectedSignMeta = document.getElementById("selected-sign-meta");
+    const goalProgress = document.getElementById("goal-progress");
+    const feedbackBox = document.getElementById("feedback-box");
+    const feedbackText = document.getElementById("feedback-text");
+
+    let phrase = "";
+    let tempSign = "";
+    let counter = 0;
+    let selectedLibraryKey = "";
+
+    function renderLibrary(filter = "") {
+        signLibraryContainer.innerHTML = "";
+        const normalizedFilter = filter.trim().toLowerCase();
+        const filtered = signLibrary.filter((item) => {
+            if (!normalizedFilter) return true;
+            return item.key.toLowerCase().includes(normalizedFilter) || item.aliases.some((alias) => alias.includes(normalizedFilter));
+        });
+
+        filtered.forEach((item) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = item.key === selectedLibraryKey ? "active" : "";
+            button.innerHTML = `<strong>${item.key}</strong><br><span>${item.description}</span>`;
+            button.onclick = () => selectLibraryItem(item.key);
+            signLibraryContainer.appendChild(button);
+        });
+
+        if (!filtered.length) {
+            signLibraryContainer.innerHTML = "<div class='chip'>Aucun geste trouve dans la bibliotheque actuelle.</div>";
+        }
+    }
+
+    function selectLibraryItem(key) {
+        selectedLibraryKey = key;
+        const item = signLibrary.find((entry) => entry.key === key);
+        if (!item) return;
+        signDemo.textContent = `${item.description} ${item.practiceTip}`;
+        selectedSignMeta.textContent = `Focus: ${item.key} - ${item.lessonHint}`;
+        renderLibrary(document.getElementById("search-word").value);
+    }
+
+    function speak(text) {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = "fr-FR";
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function speakSentence() {
+        if (!phrase.trim()) {
+            speak("Aucune phrase construite pour le moment.");
+            return;
+        }
+        speak(phrase.trim());
+    }
+
+    function updateFeedback(text, mode = "warning") {
+        feedbackBox.className = `feedback-card ${mode}`;
+        feedbackText.textContent = text;
+    }
+
+    function updateGoalProgress(found) {
+        if (trainingTargets.includes(found)) {
+            achievedTargets.add(found);
+            goalProgress.textContent = `${achievedTargets.size}/3`;
+        }
+    }
+
+    function appendDetectedSign(found) {
+        speak(found);
+        phrase += `${found === "ESPACE" ? " " : `${found} `}`;
+        sentenceDisplay.textContent = phrase.trim();
+        updateGoalProgress(found);
+    }
+
+    function showSignHelp() {
+        const word = document.getElementById("search-word").value.toLowerCase();
+        renderLibrary(word);
+        const match = signLibrary.find((item) => item.key.toLowerCase() === word || item.aliases.includes(word));
+        if (match) {
+            selectLibraryItem(match.key);
+        } else if (!word) {
+            signDemo.textContent = "Tapez un mot pour voir la consigne de geste.";
+            selectedSignMeta.textContent = "Aucun geste selectionne";
+        } else {
+            signDemo.textContent = "Mot non repertorie dans cette bibliotheque demo.";
+            selectedSignMeta.textContent = "Ajoutez d'autres gestes depuis le contenu produit";
+        }
+    }
+
+    function onResults(results) {
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
+        canvasCtx.drawImage(results.image, 0, 0, canvasElement.width, canvasElement.height);
+
+        if (results.multiHandLandmarks && results.multiHandLandmarks.length > 0) {
+            const landmarks = results.multiHandLandmarks[0];
+            drawConnectors(canvasCtx, landmarks, HAND_CONNECTIONS, { color: "#00ffcc", lineWidth: 4 });
+            const found = solveSign(landmarks);
+            letterDisplay.textContent = found;
+
+            const metadata = signLibrary.find((item) => item.key === found);
+            detectedDescription.textContent = metadata ? metadata.description : "Geste en cours d'analyse.";
+
+            if (found !== "..." && found !== "?") {
+                if (found === tempSign) {
+                    counter++;
+                    stabilityLabel.textContent = `${Math.min(counter, 25)}/25`;
+                    updateFeedback("Continuez a garder la main stable pour confirmer le geste.", "warning");
+
+                    if (counter === 25) {
+                        appendDetectedSign(found);
+                        updateFeedback(`Geste valide: ${found}. Phrase enrichie et audio lance.`, "success");
+                        counter = 0;
+                    }
+                } else {
+                    tempSign = found;
+                    counter = 0;
+                    stabilityLabel.textContent = "recalibrage";
+                }
+            } else {
+                stabilityLabel.textContent = "faible";
+                updateFeedback("Ajustez la main dans le cadre pour obtenir une detection plus nette.", "warning");
+            }
+        } else {
+            letterDisplay.textContent = "...";
+            detectedDescription.textContent = "Aucune main detectee pour l'instant.";
+            stabilityLabel.textContent = "aucune main";
+            updateFeedback("Placez votre main au centre de la camera pour lancer l'analyse.", "warning");
+        }
+
+        canvasCtx.restore();
+    }
+
+    function solveSign(lm) {
+        const indexUp = lm[8].y < lm[6].y;
+        const middleUp = lm[12].y < lm[10].y;
+        const ringUp = lm[16].y < lm[14].y;
+        const pinkyUp = lm[20].y < lm[18].y;
+        const thumbOpen = lm[4].x < lm[3].x;
+        const pinchDistance = Math.hypot(lm[8].x - lm[4].x, lm[8].y - lm[4].y);
+        const cupDistance = Math.abs(lm[8].x - lm[20].x);
+
+        if (pinchDistance < 0.045 && !middleUp && !ringUp) return "MANGER";
+        if (!indexUp && !middleUp && !ringUp && !pinkyUp) return "A";
+        if (indexUp && middleUp && ringUp && pinkyUp && !thumbOpen) return "BONJOUR";
+        if (indexUp && middleUp && ringUp && pinkyUp && thumbOpen) return "ESPACE";
+        if (indexUp && middleUp && ringUp && pinkyUp === false && thumbOpen) return "B";
+        if (!indexUp && middleUp && ringUp && !pinkyUp && cupDistance > 0.16) return "BOIRE";
+
+        return "?";
+    }
+
+    function clearSentence() {
+        phrase = "";
+        sentenceDisplay.textContent = "";
+        achievedTargets.clear();
+        goalProgress.textContent = "0/3";
+        updateFeedback("Phrase effacee. Vous pouvez recommencer une nouvelle sequence.", "warning");
+    }
+
+    renderLibrary();
+    selectLibraryItem("BONJOUR");
+
+    const hands = new Hands({
+        locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+    });
+    hands.setOptions({
+        maxNumHands: 1,
+        modelComplexity: 1,
+        minDetectionConfidence: 0.8,
+        minTrackingConfidence: 0.8
+    });
+    hands.onResults(onResults);
+
+    const camera = new Camera(videoElement, {
+        onFrame: async () => {
+            await hands.send({ image: videoElement });
+        },
+        width: 960,
+        height: 720
+    });
+    camera.start();
+</script>
+{% endblock %}

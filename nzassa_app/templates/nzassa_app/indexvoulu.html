@@ -1,0 +1,143 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nzassa School</title>
+
+    <!-- Tailwind -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .hero {
+            background: linear-gradient(to right, rgba(255,255,255,0.95), rgba(255,255,255,0.6)),
+            url("https://images.unsplash.com/photo-1588072432836-e10032774350");
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card-hover:hover {
+            transform: translateY(-8px);
+            transition: 0.3s;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+
+<body class="bg-gray-50">
+
+<!-- NAVBAR -->
+<header class="bg-white shadow sticky top-0 z-50">
+    <div class="container mx-auto flex justify-between items-center p-4">
+        <h1 class="text-3xl font-['Pacifico'] text-orange-500">Nzassa</h1>
+
+        <div class="space-x-4">
+            <a href="{% url 'login' %}" class="px-4 py-2 border border-orange-500 text-orange-500 rounded">Connexion</a>
+            
+        </div>
+    </div>
+</header>
+
+<!-- HERO -->
+<section class="hero py-20">
+    <div class="container mx-auto px-6">
+        <h2 class="text-4xl font-bold mb-4">Préservons nos langues africaines</h2>
+        <p class="mb-6 text-gray-700">Apprends ta langue maternelle avec l’IA, des jeux et la culture.</p>
+
+        <a href="{% url 'signup' %}" class="bg-orange-500 text-white px-6 py-3 rounded-lg">
+            Commencer gratuitement
+        </a>
+    </div>
+</section>
+
+<!-- MODULES -->
+<section class="py-16">
+    <div class="container mx-auto px-6">
+
+        <h2 class="text-3xl font-bold text-center mb-10">Modules</h2>
+
+        <div class="grid md:grid-cols-3 gap-8">
+
+            <!-- MODULE 1 -->
+            <a href="{% url 'apprendre_ma_langue' %}" class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                <img src="https://images.unsplash.com/photo-1584697964403-6e0b0cba9b4c" class="w-full h-48 object-cover">
+                <div class="p-4">
+                    <h3 class="font-bold text-xl mb-2">Apprendre ma langue</h3>
+                    <p>Leçons interactives avec IA</p>
+                </div>
+            </a>
+
+            <!-- MODULE 2 -->
+            <a href="{% url 'jeu' langue='bete' %}" class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                <img src="https://images.unsplash.com/photo-1603575448369-0c1b9d3f4042" class="w-full h-48 object-cover">
+                <div class="p-4">
+                    <h3 class="font-bold text-xl mb-2">Jeux éducatifs</h3>
+                    <p>Apprendre en jouant</p>
+                </div>
+            </a>
+
+            <!-- MODULE 3 -->
+            <a href="{% url 'histoires' langue='bete' %}" class="card-hover bg-white rounded-lg overflow-hidden shadow">
+                <img src="https://images.unsplash.com/photo-1607746882042-944635dfe10e" class="w-full h-48 object-cover">
+                <div class="p-4">
+                    <h3 class="font-bold text-xl mb-2">Histoires</h3>
+                    <p>Contes africains audio</p>
+                </div>
+            </a>
+
+        </div>
+    </div>
+</section>
+
+<!-- SECTION CULTURE -->
+<section class="py-16 bg-orange-100">
+    <div class="container mx-auto px-6 grid md:grid-cols-2 gap-10 items-center">
+
+        <div>
+            <h2 class="text-3xl font-bold mb-4">Découvre ton peuple</h2>
+            <p class="mb-6">Explore les traditions, cultures et ethnies de Côte d'Ivoire.</p>
+
+            <a href="#" class="bg-orange-500 text-white px-6 py-3 rounded">
+                Découvrir
+            </a>
+        </div>
+
+        <img src="https://images.unsplash.com/photo-1593642532400-2682810df593" class="rounded-lg shadow">
+    </div>
+</section>
+
+<!-- VR -->
+<section class="py-16">
+    <div class="container mx-auto px-6 text-center">
+
+        <h2 class="text-3xl font-bold mb-6">Réalité Virtuelle</h2>
+        <p class="mb-8">Explore les masques et villages en 3D</p>
+
+        <a href="{% url 'vr' %}" class="bg-orange-500 text-white px-6 py-3 rounded">
+            Explorer la VR
+        </a>
+
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-800 text-white py-10">
+    <div class="container mx-auto px-6 text-center">
+        <h2 class="text-2xl font-['Pacifico'] mb-4">Nzassa School</h2>
+        <p>© 2026 - Tous droits réservés</p>
+    </div>
+</footer>
+
+</body>
+</html>

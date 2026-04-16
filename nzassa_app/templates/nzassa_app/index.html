@@ -1,0 +1,277 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Nzassa School | Langues africaines, IA et culture vivante{% endblock %}
+
+{% block content %}
+<style>
+    .landing-stack { display: grid; gap: 30px; }
+    .hero { position: relative; overflow: hidden; padding: 36px; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr); gap: 24px; min-height: 680px; background: linear-gradient(135deg, rgba(255, 247, 235, 0.9), rgba(255, 252, 247, 0.62)), radial-gradient(circle at top left, rgba(241, 178, 74, 0.16), transparent 28%); }
+    .hero::after, .hero::before { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
+    .hero::after { right: -120px; top: -120px; width: 360px; height: 360px; background: radial-gradient(circle, rgba(241, 178, 74, 0.3), transparent 70%); }
+    .hero::before { left: -40px; bottom: -40px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(21, 94, 75, 0.16), transparent 72%); }
+    .eyebrow { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(21, 94, 75, 0.1); color: var(--forest); font-size: 0.86rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; }
+    .hero-copy { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
+    .hero h1 { margin: 18px 0 14px; font-family: "Space Grotesk", sans-serif; font-size: clamp(2.9rem, 4.6vw, 5.4rem); line-height: 0.92; letter-spacing: -0.04em; max-width: 10ch; }
+    .hero p { max-width: 60ch; font-size: 1.06rem; line-height: 1.8; color: rgba(16, 24, 23, 0.82); }
+    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
+    .button-link { text-decoration: none; border-radius: 999px; padding: 14px 18px; font-weight: 700; transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .button-link:hover { transform: translateY(-2px); }
+    .button-link.primary { color: white; background: linear-gradient(135deg, var(--clay), var(--gold)); box-shadow: 0 18px 30px rgba(196, 90, 45, 0.26); }
+    .button-link.secondary { background: rgba(8, 48, 77, 0.08); color: var(--lagoon); }
+    .hero-visuals { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(170px, 0.8fr); grid-template-rows: 1fr auto; gap: 16px; }
+    .visual-card { position: relative; overflow: hidden; min-height: 240px; border-radius: 28px; box-shadow: 0 24px 56px rgba(8, 48, 77, 0.2); background-size: cover; background-position: center; }
+    .visual-card.large { grid-row: 1 / span 2; min-height: 100%; background-image: linear-gradient(180deg, rgba(8, 48, 77, 0.08), rgba(8, 48, 77, 0.65)), url("https://images.pexels.com/photos/29663383/pexels-photo-29663383.jpeg?cs=srgb&dl=pexels-akoonie-29663383.jpg&fm=jpg"); }
+    .visual-card.small-mask { background-image: linear-gradient(180deg, rgba(16, 24, 23, 0.1), rgba(16, 24, 23, 0.55)), url("https://images.pexels.com/photos/9540962/pexels-photo-9540962.jpeg?cs=srgb&dl=pexels-cottonbro-9540962.jpg&fm=jpg"); }
+    .visual-card.small-data { min-height: 170px; padding: 18px; background: linear-gradient(160deg, rgba(8, 48, 77, 0.96), rgba(21, 94, 75, 0.94)); color: white; display: grid; align-content: start; gap: 10px; }
+    .visual-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 15%, rgba(16, 24, 23, 0.58) 100%); }
+    .visual-copy, .hero-float { position: absolute; z-index: 1; }
+    .visual-copy { left: 22px; right: 22px; bottom: 22px; color: white; }
+    .hero-float { left: 22px; top: 22px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px); color: white; font-size: 0.86rem; font-weight: 700; }
+    .hero-microgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .hero-mini { padding: 14px; border-radius: 20px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.08); }
+    .hero-mini strong { display: block; font-size: 1.35rem; margin-bottom: 4px; }
+    .hero-bottom-grid, .grid-2, .grid-3, .grid-4, .roadmap-grid, .data-grid, .image-ribbon, .word-grid { display: grid; gap: 16px; }
+    .hero-bottom-grid, .grid-2, .data-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid-3, .image-ribbon { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-4, .roadmap-grid, .word-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .hero-note, .hero-proof, .info-card, .roadmap-card, .data-card, .word-card, .search-box { padding: 20px; border-radius: 22px; background: rgba(255, 255, 255, 0.62); border: 1px solid var(--line); }
+    .hero-proof-list, .pillars-list, .check-list { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+    .hero-proof-list li { display: flex; justify-content: space-between; gap: 12px; font-size: 0.95rem; color: rgba(16, 24, 23, 0.84); }
+    .hero-proof-list span:last-child { font-weight: 800; color: var(--forest); }
+    .section-card { padding: 34px; }
+    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 24px; }
+    .section-head h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.5rem); }
+    .section-head p { margin: 0; color: rgba(16, 24, 23, 0.74); max-width: 58ch; line-height: 1.7; }
+    .pillars-list li, .check-list li { padding-left: 18px; position: relative; line-height: 1.55; color: rgba(16, 24, 23, 0.82); }
+    .pillars-list li::before, .check-list li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg, var(--clay), var(--gold)); position: absolute; left: 0; top: 0.65em; transform: translateY(-50%); }
+    .timeline-step { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, var(--forest), #2f936b); color: white; font-weight: 800; margin-bottom: 14px; }
+    .highlight-band { padding: 26px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr); gap: 20px; background: linear-gradient(135deg, rgba(21, 94, 75, 0.94), rgba(8, 48, 77, 0.92)); color: white; }
+    .highlight-band p { margin: 10px 0 0; line-height: 1.7; color: rgba(255, 255, 255, 0.86); }
+    .stage-badges { display: flex; gap: 10px; flex-wrap: wrap; align-content: start; }
+    .stage-badges span { padding: 10px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.16); font-weight: 700; font-size: 0.92rem; }
+    .image-tile { min-height: 280px; border-radius: 26px; overflow: hidden; position: relative; background-size: cover; background-position: center; box-shadow: 0 20px 50px rgba(16, 24, 23, 0.14); }
+    .image-tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16, 24, 23, 0.05), rgba(16, 24, 23, 0.58)); }
+    .image-tile .caption { position: absolute; left: 18px; right: 18px; bottom: 18px; z-index: 1; color: white; }
+    .word-card strong { display: block; font-size: 1.2rem; margin-bottom: 6px; text-transform: capitalize; }
+    .word-card span { display: block; color: rgba(16, 24, 23, 0.66); font-size: 0.9rem; line-height: 1.5; }
+    #search-input { width: 100%; padding: 16px 18px; border-radius: 18px; border: 1px solid rgba(16, 24, 23, 0.12); outline: none; font-size: 1rem; background: rgba(255, 255, 255, 0.94); }
+    #search-input:focus { border-color: rgba(21, 94, 75, 0.42); box-shadow: 0 0 0 4px rgba(21, 94, 75, 0.12); }
+    .result-card { background: rgba(255, 255, 255, 0.8); padding: 18px; margin: 12px 0; border-radius: 20px; border: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; align-items: center; box-shadow: 0 14px 28px rgba(16, 24, 23, 0.06); }
+    .btn-audio { border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 0.9rem; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, var(--clay), var(--gold)); color: white; box-shadow: 0 14px 24px rgba(196, 90, 45, 0.24); }
+    .no-result { color: rgba(16, 24, 23, 0.6); font-style: italic; }
+    @media (max-width: 1040px) { .hero, .hero-visuals, .hero-bottom-grid, .grid-2, .grid-3, .grid-4, .roadmap-grid, .data-grid, .image-ribbon, .word-grid, .highlight-band { grid-template-columns: 1fr; } .section-head { align-items: start; flex-direction: column; } }
+    @media (max-width: 640px) { .hero, .section-card, .highlight-band { padding: 24px; } .hero h1 { max-width: none; font-size: 2.6rem; } .hero-microgrid { grid-template-columns: 1fr; } .result-card { align-items: start; flex-direction: column; } }
+</style>
+
+<div class="landing-stack">
+    <section class="hero surface-card" id="vision">
+        <div class="hero-copy">
+            <div>
+                <span class="eyebrow">Plateforme culturelle + apprentissage intelligent</span>
+                <h1>Apprendre une langue africaine avec de la memoire, du rythme et une vraie identite visuelle.</h1>
+                <p>Nzassa School devient une plateforme plus ambitieuse: cours en langues, pratique culturelle, signes, immersion et un coach IA qui capitalise automatiquement les mots decouverts dans les lecons, les traductions et les parcours pour t'aider a progresser plus vite.</p>
+                <div class="hero-actions">
+                    <a class="button-link primary" href="{% url 'ai_coach' %}">Essayer le Coach IA</a>
+                    <a class="button-link secondary" href="{% url 'course_catalog' %}">Explorer les parcours</a>
+                </div>
+            </div>
+            <div class="hero-bottom-grid">
+                <div class="hero-note">
+                    <h3>Ce que l'IA fait maintenant</h3>
+                    <p>Elle parcourt le dictionnaire, les titres de lecons, les phrases cles et les contenus de cours pour construire un noyau de vocabulaire vivant. Chaque nouveau contenu enrichit sa memoire locale.</p>
+                </div>
+                <div class="hero-proof">
+                    <h3>Preuves visibles</h3>
+                    <ul class="hero-proof-list">
+                        <li><span>Coach IA local</span><span>Actif</span></li>
+                        <li><span>Langue des signes</span><span>Actif</span></li>
+                        <li><span>Immersion culturelle</span><span>Actif</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <aside class="hero-visuals">
+            <article class="visual-card large">
+                <div class="hero-float">Design vivant + culture</div>
+                <div class="visual-copy">
+                    <strong style="display:block;font-size:1.45rem;margin-bottom:8px;">Une ambiance plus premium</strong>
+                    <span style="line-height:1.6;">On quitte le rendu statique pour une direction plus editoriale, plus dynamique et plus memorisable.</span>
+                </div>
+            </article>
+            <article class="visual-card small-mask">
+                <div class="visual-copy">
+                    <strong style="display:block;font-size:1.05rem;margin-bottom:6px;">Patrimoine conserve</strong>
+                    <span style="line-height:1.55;">Les images et les codes culturels restent au centre.</span>
+                </div>
+            </article>
+            <article class="visual-card small-data">
+                <strong style="font-size:1.05rem;">Cap produit a assumer</strong>
+                <div class="hero-microgrid">
+                    <div class="hero-mini"><strong>{{ stats.languages }}</strong><span>langues</span></div>
+                    <div class="hero-mini"><strong>{{ stats.courses }}</strong><span>parcours</span></div>
+                    <div class="hero-mini"><strong>{{ stats.lessons }}</strong><span>lecons</span></div>
+                </div>
+            </article>
+        </aside>
+    </section>
+
+    <section class="section-card surface-card">
+        <div class="section-head">
+            <div><h2>Direction visuelle</h2></div>
+            <p>Tu voulais quelque chose de plus attrayant, plus dynamique et moins fade. Cette nouvelle composition assume des images fortes, des cartes plus riches et une atmosphere plus contemporaine.</p>
+        </div>
+        <div class="image-ribbon">
+            <article class="image-tile" style="background-image:linear-gradient(180deg, rgba(16,24,23,0.08), rgba(16,24,23,0.6)), url('https://images.pexels.com/photos/29663383/pexels-photo-29663383.jpeg?cs=srgb&dl=pexels-akoonie-29663383.jpg&fm=jpg');"><div class="caption"><strong>Portraits forts</strong><p style="margin:8px 0 0;line-height:1.55;">Des visuels humains, vibrants et identifiables.</p></div></article>
+            <article class="image-tile" style="background-image:linear-gradient(180deg, rgba(16,24,23,0.06), rgba(16,24,23,0.58)), url('https://images.pexels.com/photos/9540962/pexels-photo-9540962.jpeg?cs=srgb&dl=pexels-cottonbro-9540962.jpg&fm=jpg');"><div class="caption"><strong>Masques et patrimoine</strong><p style="margin:8px 0 0;line-height:1.55;">Le design garde la dimension culturelle que tu voulais conserver.</p></div></article>
+            <article class="image-tile" style="background:linear-gradient(135deg, rgba(8,48,77,0.98), rgba(21,94,75,0.94));"><div class="caption" style="top:18px;bottom:auto;"><strong>IA, cours et retention</strong><p style="margin:8px 0 0;line-height:1.65;">Le design ne sert pas juste a faire joli: il aide a vendre les parcours, l'IA et l'immersion.</p></div></article>
+        </div>
+    </section>
+
+    <section class="section-card surface-card" id="produit">
+        <div class="section-head"><div><h2>Ce que le produit doit contenir</h2></div><p>On garde ta vision, mais on la structure comme un vrai produit edtech: simple pour l'utilisateur, credible pour Django, et plus fort visuellement.</p></div>
+        <div class="grid-4">
+            <article class="info-card"><h3>1. Acquisition et compte</h3><ul class="pillars-list"><li>Inscription, connexion et recuperation de mot de passe</li><li>Choix initial de langue, niveau et objectif</li><li>Onboarding court inspire des apps mobiles</li></ul></article>
+            <article class="info-card"><h3>2. Apprentissage structure</h3><ul class="pillars-list"><li>Formations, modules, lecons et evaluation continue</li><li>Audio natif, vocabulaire, phrases et exercices</li><li>Progression visible dans un dashboard personnel</li></ul></article>
+            <article class="info-card"><h3>3. Motivation et retention</h3><ul class="pillars-list"><li>Quiz, points, badges, classement et streak quotidien</li><li>Defis courts pour garder une habitude quotidienne</li><li>Recompenses debloquant culture, IA et VR</li></ul></article>
+            <article class="info-card"><h3>4. Differenciation forte</h3><ul class="pillars-list"><li>Coach IA pour converser, guider et corriger</li><li>Langue des signes avec reconnaissance gestuelle</li><li>Immersion culturelle 3D et experiences VR</li></ul></article>
+        </div>
+    </section>
+
+    <section class="surface-card section-card">
+        <div class="section-head"><div><h2>L'IA apprend deja les mots</h2></div><p>La memoire locale du coach est nourrie automatiquement par les traductions et les contenus des cours. Ces mots servent ensuite a proposer des revisions, des lecons et des rappels utiles.</p></div>
+        <div class="word-grid">
+            {% for item in discovered_vocabulary %}
+                <article class="word-card">
+                    <strong>{{ item.word }}</strong>
+                    <span>{{ item.language }}</span>
+                    <span>Source: {{ item.source }}</span>
+                    <span>Indice: {{ item.hint|truncatechars:34 }}</span>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="highlight-band surface-card">
+        <div><h2 style="margin:0;">Positionnement produit</h2><p>Nzassa = plateforme d'apprentissage des langues africaines avec patrimoine vivant. La vraie force n'est pas seulement la traduction, mais la combinaison entre lecon, interaction, correction intelligente, signes, audio, culture et immersion.</p></div>
+        <div class="stage-badges"><span>Eleves</span><span>Etudiants</span><span>Diaspora</span><span>Touristes</span><span>Ecoles</span><span>Institutions culturelles</span></div>
+    </section>
+
+    <section class="section-card surface-card" id="roadmap">
+        <div class="section-head"><div><h2>Roadmap dans le bon ordre</h2></div><p>Ne pas tout faire d'un coup. Sur Django, la bonne strategie consiste a poser un socle stable puis a ajouter les couches qui rendent le projet irresistible.</p></div>
+        <div class="roadmap-grid">
+            <article class="roadmap-card"><div class="timeline-step">01</div><h3>Socle MVP</h3><p>Authentification, profils, choix de langue, catalogue de formations, modules, lecons et quiz.</p></article>
+            <article class="roadmap-card"><div class="timeline-step">02</div><h3>Dashboard vivant</h3><p>Progression, score, streak, badges, recommandations et reprise rapide de l'apprentissage.</p></article>
+            <article class="roadmap-card"><div class="timeline-step">03</div><h3>Design premium</h3><p>Interface qui impressionne en quelques secondes: accueil fort, navigation claire et mobile first.</p></article>
+            <article class="roadmap-card"><div class="timeline-step">04</div><h3>Innovation</h3><p>IA conversationnelle, correction automatique, VR culturelle, paiement premium et communaute.</p></article>
+        </div>
+    </section>
+
+    <section class="section-card surface-card">
+        <div class="section-head"><div><h2>Coach IA langues et cours</h2></div><p>La nouvelle brique IA relie le dictionnaire, les lecons et les parcours pour faire de la plateforme autre chose qu'un simple catalogue statique.</p></div>
+        <div class="grid-2">
+            <article class="info-card"><h3>Ce qu'il sait faire</h3><ul class="check-list"><li>Retrouver des mots et traductions deja presents</li><li>Suggérer un parcours ou une lecon adaptee</li><li>Reutiliser les mots decouverts automatiquement</li><li>Servir d'entree vers une future IA plus conversationnelle</li></ul></article>
+            <article class="info-card"><h3>Ce que cela prepare</h3><ul class="check-list"><li>Revisions intelligentes par theme</li><li>Mini-lecons generees a partir du vocabulaire local</li><li>Suggestions basees sur la progression de l'utilisateur</li><li>Passage futur a une IA externe sans refaire tout le produit</li></ul><p style="margin-top:16px;"><a class="button-link secondary" href="{% url 'ai_coach' %}">Ouvrir le coach</a></p></article>
+        </div>
+    </section>
+
+    <section class="section-card surface-card">
+        <div class="section-head"><div><h2>Architecture metier a prevoir</h2></div><p>Ta base de donnees doit raconter le produit. Le backend Django doit deja anticiper le premium, la gamification, les langues des signes et les contenus culturels.</p></div>
+        <div class="data-grid">
+            <article class="data-card"><h3>Base apprentissage</h3><ul class="check-list"><li>Utilisateur et profil apprenant</li><li>Langue, parcours, formation, module, lecon</li><li>Quiz, question, reponse, resultat</li><li>Progression, score, badges et streak</li></ul></article>
+            <article class="data-card"><h3>Extensions avancees</h3><ul class="check-list"><li>Session chatbot IA et historique des pratiques</li><li>Contenus signes, gestes detectes et videos</li><li>Scenes VR, objets culturels et narrations</li><li>Abonnement, paiement, offres gratuites et premium</li></ul></article>
+        </div>
+    </section>
+
+    <section class="section-card surface-card">
+        <div class="section-head"><div><h2>Monetisation et argument investisseur</h2></div><p>Le modele economique doit etre simple a comprendre: gratuit pour attirer, premium pour approfondir, avec une vraie superiorite produit grace a l'IA, l'audio, la VR et la langue des signes.</p></div>
+        <div class="grid-3">
+            <article class="info-card"><h3>Offre gratuite</h3><p>Acces limite aux lecons de base, au dictionnaire, a quelques quiz et a une partie de la decouverte culturelle.</p></article>
+            <article class="info-card"><h3>Offre premium</h3><p>Acces complet, IA avancee, parcours personnalises, scenes VR, analytics et contenus exclusifs.</p></article>
+            <article class="info-card"><h3>Preuve de traction</h3><p>Pour convaincre, il faut montrer activation, retention, temps passe, progression et interet pour le premium.</p></article>
+        </div>
+    </section>
+
+    <section class="section-card surface-card">
+        <div class="section-head"><div><h2>Parcours deja prets a montrer</h2></div><p>Ces parcours affichent la direction produit immediate. Ils peuvent etre enrichis depuis l'admin Django sans changer l'architecture generale.</p></div>
+        <div class="grid-3">
+            {% for course in featured_courses %}
+                <article class="info-card">
+                    <h3>{{ course.title }}</h3>
+                    <p>{{ course.short_description }}</p>
+                    <ul class="check-list">
+                        <li>{{ course.language.name }} - {{ course.level }}</li>
+                        <li>{{ course.lesson_count }} lecons - {{ course.estimated_minutes }} min</li>
+                        <li>{% if course.is_premium %}Premium{% else %}Accessible gratuitement{% endif %}</li>
+                    </ul>
+                    <p style="margin-top:16px;"><a class="button-link secondary" href="{% url 'course_detail' course.slug %}">Ouvrir le parcours</a></p>
+                </article>
+            {% empty %}
+                <article class="info-card"><h3>Parcours en preparation</h3><p>Ajoute du contenu depuis l'admin Django pour remplir automatiquement cette section.</p></article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="section-card surface-card" id="demo">
+        <div class="section-head"><div><h2>Demo deja presente dans ce projet</h2></div><p>Le projet contient deja une base interessante: dictionnaire dynamique, page de langue des signes et scene immersive. Cette demo sert maintenant aussi de point d'entree pour le coach IA.</p></div>
+        <div class="data-grid">
+            <div class="search-box">
+                <h3 style="margin-top:0;">Dictionnaire vivant</h3>
+                <p style="line-height:1.7; color:rgba(16,24,23,0.78);">Tape un mot francais pour tester la traduction actuelle et la lecture audio. Cette partie peut evoluer vers un vrai module d'apprentissage lexical.</p>
+                <input type="text" id="search-input" placeholder="Tapez un mot francais, par exemple: bonjour">
+            </div>
+            <div>
+                <h3 style="margin-top:0;">Pont avec les modules futurs</h3>
+                <ul class="check-list" style="margin-top:0;">
+                    <li>Le dictionnaire devient une entree vers les lecons</li>
+                    <li>La page signes devient un laboratoire d'accessibilite</li>
+                    <li>La VR devient un moteur d'immersion culturelle premium</li>
+                    <li>L'IA unifie conversation, correction et accompagnement</li>
+                </ul>
+                <div id="results-container" style="margin-top:18px;"><p class="no-result">Les resultats de la demo apparaitront ici.</p></div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const input = document.getElementById('search-input');
+    const container = document.getElementById('results-container');
+    function parler(texte) {
+        const synthese = window.speechSynthesis;
+        const enonce = new SpeechSynthesisUtterance(texte);
+        enonce.lang = 'fr-FR';
+        enonce.rate = 0.9;
+        synthese.speak(enonce);
+    }
+    input.addEventListener('input', (e) => {
+        const q = e.target.value.trim();
+        if (q.length > 1) {
+            fetch(`/chercher/?q=${encodeURIComponent(q)}`)
+                .then((response) => response.json())
+                .then((json) => {
+                    container.innerHTML = '';
+                    if (!json.data.length) {
+                        container.innerHTML = '<p class="no-result">Aucun mot trouve dans la demo actuelle.</p>';
+                        return;
+                    }
+                    json.data.forEach((item) => {
+                        container.innerHTML += `
+                            <div class="result-card">
+                                <div>
+                                    <span style="color:#6b7280;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;">${item.langue}</span><br>
+                                    <strong style="font-size:1.2rem;">${item.origine}</strong>
+                                    <span style="margin:0 8px;color:#6b7280;">-></span>
+                                    <span style="font-size:1.2rem;color:var(--forest);">${item.traduction}</span>
+                                </div>
+                                <button class="btn-audio" onclick="parler('${item.traduction}')" title="Ecouter">Audio</button>
+                            </div>`;
+                    });
+                });
+        } else {
+            container.innerHTML = '<p class="no-result">Les resultats de la demo apparaitront ici.</p>';
+        }
+    });
+</script>
+{% endblock %}

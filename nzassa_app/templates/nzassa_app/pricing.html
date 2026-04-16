@@ -1,0 +1,80 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Tarifs | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .pricing-shell {
+        display: grid;
+        gap: 24px;
+    }
+
+    .pricing-hero,
+    .pricing-grid {
+        padding: 30px;
+    }
+
+    .plans {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+    }
+
+    .plan-card {
+        padding: 24px;
+        border-radius: 24px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+    }
+
+    .plan-card.featured {
+        background: linear-gradient(135deg, rgba(13, 59, 102, 0.96), rgba(31, 107, 79, 0.94));
+        color: white;
+    }
+
+    @media (max-width: 860px) {
+        .plans {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="pricing-shell">
+    <section class="surface-card pricing-hero">
+        <p style="margin-top:0;color:var(--forest);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">
+            Monetisation
+        </p>
+        <h1 style="margin:0 0 12px;font-size:2.5rem;">Un modele simple: gratuit pour entrer, premium pour maitriser.</h1>
+        <p style="max-width:70ch;line-height:1.8;">
+            L'offre doit rester lisible pour les apprenants et credible pour les investisseurs.
+            L'objectif est de monetiser les experiences les plus puissantes sans bloquer la decouverte.
+        </p>
+    </section>
+
+    <section class="surface-card pricing-grid">
+        <div class="plans">
+            <article class="plan-card">
+                <h2 style="margin-top:0;">Offre gratuite</h2>
+                <p style="font-size:2rem;font-weight:800;">0 FCFA</p>
+                <ul style="padding-left:18px;line-height:1.8;">
+                    <li>Acces au dictionnaire et aux bases de vocabulaire</li>
+                    <li>Parcours d'initiation et quiz essentiels</li>
+                    <li>Decouverte de la culture et des signes</li>
+                    <li>Creation du dashboard et suivi de progression</li>
+                </ul>
+            </article>
+
+            <article class="plan-card featured">
+                <h2 style="margin-top:0;">Offre premium</h2>
+                <p style="font-size:2rem;font-weight:800;">Abonnement mensuel</p>
+                <ul style="padding-left:18px;line-height:1.8;">
+                    <li>Acces complet a tous les parcours et niveaux</li>
+                    <li>Pratique conversationnelle IA et correction avancee</li>
+                    <li>Experiences VR, contenus audio natifs et culture premium</li>
+                    <li>Parcours personnalises, badges exclusifs et analytics</li>
+                </ul>
+            </article>
+        </div>
+    </section>
+</div>
+{% endblock %}

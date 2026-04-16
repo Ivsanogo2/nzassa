@@ -1,0 +1,92 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Inscription | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .auth-shell {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 28px;
+    }
+
+    .auth-card {
+        padding: 32px;
+    }
+
+    .auth-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .full-span {
+        grid-column: 1 / -1;
+    }
+
+    .auth-card h1 {
+        margin-top: 0;
+        font-size: 2rem;
+    }
+
+    .auth-card label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 700;
+    }
+
+    .auth-card input,
+    .auth-card select {
+        width: 100%;
+        padding: 14px 16px;
+        border-radius: 16px;
+        border: 1px solid rgba(20, 33, 29, 0.16);
+        background: rgba(255, 255, 255, 0.92);
+    }
+
+    .submit-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, var(--clay), var(--gold));
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    @media (max-width: 700px) {
+        .auth-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="auth-shell">
+    <section class="surface-card auth-card">
+        <h1>Creer votre compte</h1>
+        <p>Demarrez votre parcours Django-edtech avec langue, signes, culture, IA et immersion.</p>
+        <form method="post" class="auth-grid">
+            {% csrf_token %}
+            {% for field in form %}
+                <div class="{% if field.name == 'username' or field.name == 'selected_language' or field.name == 'password1' or field.name == 'password2' %}{% else %}{% endif %}{% if field.name == 'goal' or field.name == 'level' or field.name == 'email' or field.name == 'first_name' %}{% endif %}">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}
+                        <small style="color:rgba(20,33,29,0.62);">{{ field.help_text|safe }}</small>
+                    {% endif %}
+                    {% if field.errors %}
+                        <small style="color:#b42318;">{{ field.errors|striptags }}</small>
+                    {% endif %}
+                </div>
+            {% endfor %}
+            <div class="full-span">
+                <button type="submit" class="submit-btn">Creer mon compte</button>
+            </div>
+        </form>
+        <p style="margin-bottom:0;margin-top:18px;">
+            Vous avez deja un compte ?
+            <a href="{% url 'login' %}">Se connecter</a>
+        </p>
+    </section>
+</div>
+{% endblock %}

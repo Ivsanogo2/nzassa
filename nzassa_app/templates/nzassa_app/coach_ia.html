@@ -1,0 +1,106 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Coach IA | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .coach-stack { display: grid; gap: 24px; }
+    .coach-hero, .coach-card { padding: 30px; }
+    .coach-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr); gap: 18px; align-items: start; }
+    .coach-hero h1, .coach-card h2 { margin-top: 0; }
+    .coach-hero h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(2.2rem, 4vw, 3.8rem); line-height: 0.95; margin-bottom: 12px; }
+    .coach-side { padding: 22px; border-radius: 24px; background: linear-gradient(145deg, rgba(8, 48, 77, 0.96), rgba(21, 94, 75, 0.94)); color: white; }
+    .coach-side strong { display: block; font-size: 2rem; margin-bottom: 6px; }
+    .coach-form { display: grid; gap: 14px; margin-top: 20px; }
+    .coach-form input { width: 100%; border-radius: 18px; border: 1px solid rgba(16, 24, 23, 0.12); padding: 16px 18px; font-size: 1rem; background: rgba(255, 255, 255, 0.95); }
+    .coach-form button { width: fit-content; border: none; border-radius: 999px; padding: 14px 20px; font-weight: 800; cursor: pointer; color: white; background: linear-gradient(135deg, var(--clay), var(--gold)); box-shadow: 0 16px 28px rgba(196, 90, 45, 0.24); }
+    .coach-grid, .word-grid, .course-grid { display: grid; gap: 16px; }
+    .coach-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
+    .word-grid, .course-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .answer-box, .mini-box, .word-card, .course-card { padding: 20px; border-radius: 22px; border: 1px solid rgba(16, 24, 23, 0.08); background: rgba(255, 255, 255, 0.62); }
+    .answer-box ul, .mini-box ul { margin: 14px 0 0; padding-left: 18px; line-height: 1.75; }
+    .word-card strong, .course-card strong { display: block; margin-bottom: 6px; font-size: 1.1rem; }
+    .meta { color: rgba(16, 24, 23, 0.62); font-size: 0.92rem; line-height: 1.6; }
+    @media (max-width: 980px) { .coach-hero, .coach-grid, .word-grid, .course-grid { grid-template-columns: 1fr; } }
+</style>
+
+<div class="coach-stack">
+    <section class="surface-card coach-hero">
+        <div>
+            <p style="margin-top:0;color:var(--forest);font-weight:800;text-transform:uppercase;letter-spacing:0.08em;">IA langues et cours</p>
+            <h1>Un coach qui relie les mots, les parcours et les lecons.</h1>
+            <p style="line-height:1.8;color:rgba(16,24,23,0.8);">
+                Cette IA locale n'attend pas une API externe pour etre utile. Elle apprend deja les mots presents
+                dans la plateforme, les transforme en suggestions et te renvoie vers les bons contenus.
+            </p>
+            <form method="get" class="coach-form">
+                <input type="text" name="prompt" value="{{ prompt }}" placeholder="Exemple: apprends-moi bonjour, mots pour voyager, ou baoule debutant">
+                <button type="submit">Lancer le coach</button>
+            </form>
+        </div>
+        <aside class="coach-side">
+            <strong>{{ guidance.discovered_vocabulary|length }}</strong>
+            <span>Mots prioritaires remontes par l'IA locale</span>
+            <p style="line-height:1.75;color:rgba(255,255,255,0.82);margin-bottom:0;">
+                {% if selected_language %}
+                    Langue preferee detectee: {{ selected_language.name }}.
+                {% else %}
+                    Connecte-toi pour personnaliser encore plus les suggestions.
+                {% endif %}
+            </p>
+        </aside>
+    </section>
+
+    <section class="coach-grid">
+        <article class="surface-card coach-card">
+            <h2>{{ guidance.headline }}</h2>
+            <div class="answer-box">
+                <p style="margin-top:0;line-height:1.8;">{{ guidance.summary }}</p>
+                <ul>
+                    {% for action in guidance.actions %}
+                        <li>{{ action }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% if guidance.matches %}
+                <div class="mini-box" style="margin-top:16px;">
+                    <strong>Correspondances retrouvees</strong>
+                    <ul>
+                        {% for match in guidance.matches %}
+                            <li>{{ match }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            {% endif %}
+        </article>
+
+        <article class="surface-card coach-card">
+            <h2>Parcours relies</h2>
+            <div class="course-grid">
+                {% for course in guidance.related_courses|default:featured_courses %}
+                    <div class="course-card">
+                        <strong>{{ course.title }}</strong>
+                        <div class="meta">{{ course.language.name }} · {{ course.level }}</div>
+                        <p style="line-height:1.7;">{{ course.short_description }}</p>
+                        <a href="{% url 'course_detail' course.slug %}">Voir le parcours</a>
+                    </div>
+                {% endfor %}
+            </div>
+        </article>
+    </section>
+
+    <section class="surface-card coach-card">
+        <h2>Mots que l'IA a appris seule</h2>
+        <div class="word-grid">
+            {% for item in guidance.discovered_vocabulary %}
+                <div class="word-card">
+                    <strong>{{ item.word }}</strong>
+                    <div class="meta">{{ item.language }}</div>
+                    <div class="meta">Source: {{ item.source }}</div>
+                    <p style="margin-bottom:0;line-height:1.7;">{{ item.hint|truncatechars:80 }}</p>
+                </div>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

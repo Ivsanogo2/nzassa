@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Connexion | Nzassa School</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+  <div class="container mt-5">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="card shadow-lg">
+          <div class="card-body">
+            <h3 class="card-title text-center mb-4">
+            <div class="text-center mt-3">
+              <a href="{% url 'signup' %}">Pas encore de compte ? Inscris-toi ici</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nzassa School - Préserver et valoriser les langues et cultures de Côte d'Ivoire</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#E67E22',secondary:'#F39C12'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        .hero-section {
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.9) 40%, rgba(255, 255, 255, 0.4) 70%, rgba(255, 255, 255, 0) 100%), url('https://readdy.ai/api/search-image?query=A%20vibrant%20and%20colorful%20scene%20showcasing%20the%20rich%20cultural%20diversity%20of%20Ivory%20Coast.%20The%20image%20features%20traditional%20African%20patterns%2C%20children%20learning%20together%2C%20and%20cultural%20symbols.%20The%20left%20side%20has%20a%20clean%20white%20gradient%20background%20that%20smoothly%20transitions%20to%20reveal%20colorful%20cultural%20elements%20on%20the%20right%20side.%20The%20overall%20style%20is%20modern%2C%20bright%2C%20and%20educational%20with%20soft%20lighting.&width=1200&height=600&seq=nzassa1&orientation=landscape');
+            background-size: cover;
+            background-position: center;
+        }
+        .language-card {
+            transition: transform 0.3s ease;
+        }
+        .language-card:hover {
+            transform: translateY(-5px);
+        }
+        .module-card {
+            transition: all 0.3s ease;
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #E67E22;
+        }
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+    </style>
+</head>
+<body class="bg-white">
+    <!-- Header -->
+    <header class="sticky top-0 z-50 bg-white shadow-md">
+        <div class="container mx-auto px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center">
+                <a href="#" class="text-3xl font-['Pacifico'] text-primary">Nzassa School</a>
+            </div>
+            
+            <nav class="hidden md:flex items-center space-x-6">
+                <a href="#modules" class="text-gray-700 hover:text-primary font-medium transition-colors">Modules</a>
+                <a href="#features" class="text-gray-700 hover:text-primary font-medium transition-colors">Fonctionnalités</a>
+                <a href="#languages" class="text-gray-700 hover:text-primary font-medium transition-colors">Langues</a>
+                <a href="#about" class="text-gray-700 hover:text-primary font-medium transition-colors">À propos</a>
+            </nav>
+            
+            <div class="flex items-center space-x-4">
+                <div class="relative hidden md:block">
+                    <input type="text" placeholder="Rechercher..." class="pl-10 pr-4 py-2 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                    <div class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400">
+                        <i class="ri-search-line"></i>
+                    </div>
+                </div>
+                <button class="bg-white text-primary border border-primary hover:bg-gray-50 px-4 py-2 rounded-button font-medium text-sm whitespace-nowrap"><a href="{% url 'login' %}" class="btn"><i class="fas fa-sign-in-alt"></i>Connexion</a></button>
+                <button class="bg-primary text-white hover:bg-opacity-90 px-4 py-2 rounded-button font-medium text-sm whitespace-nowrap"><a href="{% url 'signup' %}" class="btn"><i class="fas fa-user-plus"></i>S'inscrire</a></button>
+                <button class="md:hidden w-10 h-10 flex items-center justify-center text-gray-700">
+                    <i class="ri-menu-line text-xl"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero-section w-full py-16 md:py-24">
+        <div class="container mx-auto px-4 w-full">
+            <div class="max-w-2xl">
+                <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-6">Préservons ensemble notre patrimoine linguistique</h1>
+                <p class="text-lg text-gray-600 mb-8">Nzassa School est une plateforme éducative innovante qui permet aux enfants, élèves et curieux d'apprendre leur langue maternelle de manière interactive et ludique.</p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="bg-primary text-white hover:bg-opacity-90 px-6 py-3 rounded-button font-medium text-base whitespace-nowrap"> <a href="{% url 'signup' %}" class="btn"></a></button>
+                    <button class="bg-white text-gray-700 border border-gray-300 hover:bg-gray-50 px-6 py-3 rounded-button font-medium text-base whitespace-nowrap">En savoir plus</button>
+                </div>
+                <div class="mt-8 flex items-center gap-6">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
+                            <i class="ri-translate-2-line text-green-600"></i>
+                        </div>
+                        <span class="text-sm font-medium">15+ langues</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                            <i class="ri-book-open-line text-blue-600"></i>
+                        </div>
+                        <span class="text-sm font-medium">500+ leçons</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center">
+                            <i class="ri-user-line text-yellow-600"></i>
+                        </div>
+                        <span class="text-sm font-medium">10K+ utilisateurs</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modules Section -->
+    <section id="modules" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Nos modules d'apprentissage</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Découvrez nos différents modules conçus pour vous faire découvrir et apprendre les langues et cultures ivoiriennes de manière interactive.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Module 1 -->
+                <div class="module-card bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="h-48 bg-yellow-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=African%20children%20learning%20language%20in%20a%20modern%20classroom%20setting%20with%20digital%20tablets.%20The%20scene%20shows%20interactive%20learning%20with%20language%20symbols%20and%20words%20displayed.%20The%20background%20is%20simple%20and%20clean%2C%20focusing%20on%20the%20educational%20activity.&width=600&height=400&seq=nzassa2&orientation=landscape" alt="Apprendre ma langue" class="w-full h-full object-cover object-top">
+                        <div class="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">Module 1</div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center mr-3">
+                                <i class="ri-chat-3-line text-yellow-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Apprendre ma langue</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Des leçons simples et progressives pour apprendre le vocabulaire, les expressions et la grammaire de votre langue maternelle.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">15 langues disponibles</span>
+                            <button class="text-primary font-medium flex items-center text-sm whitespace-nowrap">
+                                  <a href="{% url 'apprendre_ma_langue' %}" class="btn"><i class="fas fa-book-reader"></i>Apprendre ma langue</a> <i class="ri-arrow-right-line ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Module 2 -->
+                <div class="module-card bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="h-48 bg-blue-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=African%20children%20playing%20educational%20games%20on%20tablets%20with%20colorful%20game%20interfaces%20showing%20language%20learning%20activities.%20The%20scene%20depicts%20interactive%20gaming%20with%20cultural%20symbols.%20The%20background%20is%20simple%20and%20clean%2C%20focusing%20on%20the%20fun%20learning%20experience.&width=600&height=400&seq=nzassa3&orientation=landscape" alt="Jeux éducatifs" class="w-full h-full object-cover object-top">
+                        <div class="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">Module 2</div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                                <i class="ri-gamepad-line text-blue-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Jeux éducatifs</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Des jeux interactifs et ludiques inspirés de Duolingo pour renforcer votre apprentissage tout en vous amusant.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">25+ jeux disponibles</span>
+                            <button class="text-primary font-medium flex items-center text-sm whitespace-nowrap">
+                                <a href="{% url 'jeu' langue='bete' %}" class="btn"><i class="fas fa-gamepad"></i>Jeux éducatifs</a> <i class="ri-arrow-right-line ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Module 3 -->
+                <div class="module-card bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="h-48 bg-green-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=An%20elderly%20African%20storyteller%20sharing%20traditional%20tales%20with%20attentive%20children%20in%20a%20modern%20setting%20with%20digital%20elements.%20The%20scene%20shows%20the%20blend%20of%20traditional%20storytelling%20and%20modern%20education.%20The%20background%20is%20simple%20and%20clean%2C%20focusing%20on%20the%20cultural%20transmission.&width=600&height=400&seq=nzassa4&orientation=landscape" alt="Histoires et Légendes" class="w-full h-full object-cover object-top">
+                        <div class="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">Module 3</div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                                <i class="ri-book-line text-green-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Histoires et Légendes</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Une collection de récits traditionnels issus de toutes les aires culturelles de Côte d'Ivoire, disponibles en texte et en audio.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">100+ histoires</span>
+                            <button class="text-primary font-medium flex items-center text-sm whitespace-nowrap">
+                                <a href="{% url 'histoires' langue='bete' %}" class="btn"><i class="fas fa-headphones-alt"></i>Histoires</a><i class="ri-arrow-right-line ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Module 4 -->
+                <div class="module-card bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="h-48 bg-purple-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=A%20digital%20display%20showing%20information%20about%20different%20Ivorian%20ethnic%20groups%20with%20cultural%20artifacts%2C%20traditional%20clothing%2C%20and%20maps.%20The%20scene%20depicts%20an%20interactive%20educational%20interface%20about%20cultural%20heritage.%20The%20background%20is%20simple%20and%20clean%2C%20focusing%20on%20the%20cultural%20information.&width=600&height=400&seq=nzassa5&orientation=landscape" alt="Découvrir mon peuple" class="w-full h-full object-cover object-top">
+                        <div class="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">Module 4</div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center mr-3">
+                                <i class="ri-group-line text-purple-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Découvrir mon peuple</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Des fiches détaillées présentant les différentes ethnies, leurs traditions, coutumes et objets sacrés.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">60+ ethnies documentées</span>
+                            <button class="text-primary font-medium flex items-center text-sm whitespace-nowrap">
+                                Découvrir <i class="ri-arrow-right-line ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Module 5 -->
+                <div class="module-card bg-white rounded-lg shadow-lg overflow-hidden">
+                    <div class="h-48 bg-red-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Children%20using%20virtual%20reality%20headsets%20to%20explore%203D%20models%20of%20traditional%20African%20masks%20and%20artifacts%20in%20an%20educational%20setting.%20The%20scene%20shows%20immersive%20cultural%20learning%20with%20digital%20technology.%20The%20background%20is%20simple%20and%20clean%2C%20focusing%20on%20the%20virtual%20reality%20experience.&width=600&height=400&seq=nzassa6&orientation=landscape" alt="Trésors en réalité virtuelle" class="w-full h-full object-cover object-top">
+                        <div class="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-2 py-1 rounded-full">Module 5</div>
+                    </div>
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                                <i class="ri-vr-line text-red-600"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-gray-800">Trésors en réalité virtuelle</h3>
+                        </div>
+                        <p class="text-gray-600 mb-4">Exploration 3D de masques, statues et objets rituels pour une immersion culturelle complète et interactive.</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-sm text-gray-500">200+ objets en 3D</span>
+                            <button class="text-primary font-medium flex items-center text-sm whitespace-nowrap">
+                                 <a href="{% url 'vr' %}" class="btn"><i class="fas fa-vr-cardboard"></i>Réalité virtuelle</a><i class="ri-arrow-right-line ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Promo Card -->
+                <div class="module-card bg-gradient-to-br from-primary to-secondary rounded-lg shadow-lg overflow-hidden">
+                    <div class="p-8 text-white h-full flex flex-col justify-between">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">Commencez votre voyage culturel dès aujourd'hui</h3>
+                            <p class="mb-6 opacity-90">Inscrivez-vous gratuitement et accédez à tous nos modules d'apprentissage pour découvrir la richesse culturelle de la Côte d'Ivoire.</p>
+                        </div>
+                        <button class="bg-white text-primary hover:bg-opacity-90 px-6 py-3 rounded-button font-medium text-base self-start whitespace-nowrap">S'inscrire gratuitement</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Pourquoi choisir Nzassa School ?</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Notre plateforme combine technologie moderne et savoir traditionnel pour offrir une expérience d'apprentissage unique.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Feature 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="w-14 h-14 rounded-lg bg-yellow-100 flex items-center justify-center mb-4">
+                        <i class="ri-device-line text-2xl text-yellow-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Apprentissage multiplateforme</h3>
+                    <p class="text-gray-600">Accessible sur ordinateur, tablette et smartphone pour apprendre n'importe où, n'importe quand.</p>
+                </div>
+                
+                <!-- Feature 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="w-14 h-14 rounded-lg bg-blue-100 flex items-center justify-center mb-4">
+                        <i class="ri-mic-line text-2xl text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Prononciation authentique</h3>
+                    <p class="text-gray-600">Enregistrements audio réalisés par des locuteurs natifs pour une prononciation parfaite.</p>
+                </div>
+                
+                <!-- Feature 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="w-14 h-14 rounded-lg bg-green-100 flex items-center justify-center mb-4">
+                        <i class="ri-game-line text-2xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Apprentissage ludique</h3>
+                    <p class="text-gray-600">Système de points, badges et niveaux pour rendre l'apprentissage amusant et motivant.</p>
+                </div>
+                
+                <!-- Feature 4 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="w-14 h-14 rounded-lg bg-purple-100 flex items-center justify-center mb-4">
+                        <i class="ri-community-line text-2xl text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Communauté active</h3>
+                    <p class="text-gray-600">Échangez avec d'autres apprenants et des experts culturels pour enrichir votre expérience.</p>
+                </div>
+                
+                <!-- Feature 5 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="w-14 h-14 rounded-lg bg-red-100 flex items-center justify-center mb-4">
+                        <i class="ri-book-mark-line text-2xl text-red-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Contenu vérifié</h3>
+                    <p class="text-gray-600">Tous nos contenus sont validés par des experts linguistiques et culturels pour garantir leur authenticité.</p>
+                </div>
+                
+                <!-- Feature 6 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="w-14 h-14 rounded-lg bg-indigo-100 flex items-center justify-center mb-4">
+                        <i class="ri-update-line text-2xl text-indigo-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Mises à jour régulières</h3>
+                    <p class="text-gray-600">De nouveaux contenus sont ajoutés régulièrement pour enrichir votre apprentissage.</p>
+                </div>
+            </div>
+            
+            <div class="mt-12 bg-gray-100 rounded-lg p-8">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+                    <div class="md:w-1/2">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Préservons ensemble notre patrimoine culturel</h3>
+                        <p class="text-gray-600 mb-6">Nzassa School est bien plus qu'une plateforme d'apprentissage, c'est un projet de préservation du patrimoine culturel ivoirien pour les générations futures.</p>
+                        <div class="flex flex-wrap gap-4">
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-check-line text-green-600"></i>
+                                </div>
+                                <span class="text-sm font-medium">Sauvegarde des langues</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-check-line text-green-600"></i>
+                                </div>
+                                <span class="text-sm font-medium">Transmission des savoirs</span>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-check-line text-green-600"></i>
+                                </div>
+                                <span class="text-sm font-medium">Valorisation culturelle</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="md:w-1/2">
+                        <img src="https://readdy.ai/api/search-image?query=A%20diverse%20group%20of%20Ivorian%20children%20and%20adults%20collaborating%20to%20document%20cultural%20heritage%20using%20digital%20tools.%20The%20scene%20shows%20intergenerational%20knowledge%20transfer%20in%20a%20modern%20educational%20context.%20The%20background%20is%20simple%20and%20clean%2C%20focusing%20on%20the%20collaborative%20preservation%20effort.&width=600&height=400&seq=nzassa7&orientation=landscape" alt="Préservation du patrimoine" class="w-full h-auto rounded-lg shadow-md">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Languages Section -->
+    <section id="languages" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Langues disponibles</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Découvrez les différentes langues ivoiriennes disponibles sur notre plateforme et commencez votre apprentissage dès maintenant.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                <!-- Language 1 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-yellow-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Baoul%C3%A9%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Baoul%C3%A9%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa8&orientation=landscape" alt="Baoulé" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Baoulé</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">45 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">2.5K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 2 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-blue-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20B%C3%A9t%C3%A9%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20B%C3%A9t%C3%A9%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa9&orientation=landscape" alt="Bété" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Bété</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">38 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">1.8K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 3 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-green-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Malink%C3%A9%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Malink%C3%A9%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa10&orientation=landscape" alt="Malinké" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Malinké</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">42 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">2.2K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 4 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-purple-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20S%C3%A9noufo%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20S%C3%A9noufo%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa11&orientation=landscape" alt="Sénoufo" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Sénoufo</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">35 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">1.5K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 5 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-red-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Agni%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Agni%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa12&orientation=landscape" alt="Agni" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Agni</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">32 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">1.3K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 6 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-indigo-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Dioula%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Dioula%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa13&orientation=landscape" alt="Dioula" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Dioula</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">40 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">2.0K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 7 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-yellow-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Yacouba%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Yacouba%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa14&orientation=landscape" alt="Yacouba" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Yacouba</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">28 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">1.1K</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 8 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-blue-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Atti%C3%A9%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Atti%C3%A9%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa15&orientation=landscape" alt="Attié" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Attié</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">25 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">950</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 9 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-green-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Gouro%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Gouro%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa16&orientation=landscape" alt="Gouro" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Gouro</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">22 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">820</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Language 10 -->
+                <div class="language-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div class="h-32 bg-purple-100 relative overflow-hidden">
+                        <img src="https://readdy.ai/api/search-image?query=Traditional%20Wob%C3%A9%20cultural%20symbols%20and%20patterns%20on%20a%20simple%20clean%20background.%20The%20image%20features%20distinctive%20textile%20patterns%20and%20artistic%20elements%20specific%20to%20Wob%C3%A9%20culture%20of%20Ivory%20Coast.&width=300&height=200&seq=nzassa17&orientation=landscape" alt="Wobé" class="w-full h-full object-cover object-top">
+                    </div>
+                    <div class="p-4">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">Wobé</h3>
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs text-gray-500">20 leçons</span>
+                            <div class="flex items-center">
+                                <div class="w-6 h-6 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="ri-user-line text-green-600 text-xs"></i>
+                                </div>
+                                <span class="text-xs text-gray-500 ml-1">750</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mt-8 text-center">
+                <button class="bg-white text-primary border border-primary hover:bg-gray-50 px-6 py-3 rounded-button font-medium text-base whitespace-nowrap">Voir toutes les langues</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="py-16">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold text-gray-800 mb-4">Ce que disent nos utilisateurs</h2>
+                <p class="text-gray-600 max-w-2xl mx-auto">Découvrez les témoignages de nos utilisateurs qui ont déjà commencé leur voyage linguistique et culturel avec Nzassa School.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Testimonial 1 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 flex">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-6">"Grâce à Nzassa School, j'ai pu apprendre le Baoulé, la langue de mes grands-parents. Les leçons sont simples et les jeux très amusants. Je peux maintenant communiquer avec ma famille au village !"</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-4">
+                            <i class="ri-user-line text-gray-500"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Kouamé Adama</h4>
+                            <p class="text-sm text-gray-500">Étudiant, 22 ans</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 2 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 flex">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-6">"En tant qu'enseignante, j'utilise Nzassa School comme support pédagogique pour sensibiliser mes élèves à la richesse culturelle de notre pays. Les histoires et légendes sont particulièrement appréciées !"</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-4">
+                            <i class="ri-user-line text-gray-500"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Aminata Koné</h4>
+                            <p class="text-sm text-gray-500">Enseignante, 35 ans</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Testimonial 3 -->
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <div class="flex items-center mb-4">
+                        <div class="text-yellow-400 flex">
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-fill"></i>
+                            <i class="ri-star-half-fill"></i>
+                        </div>
+                    </div>
+                    <p class="text-gray-600 mb-6">"Vivant à l'étranger depuis 10 ans, Nzassa School me permet de rester connecté à mes racines et de transmettre notre culture à mes enfants. La section réalité virtuelle est impressionnante !"</p>
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center mr-4">
+                            <i class="ri-user-line text-gray-500"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-bold text-gray-800">Olivier Yao</h4>
+                            <p class="text-sm text-gray-500">Ingénieur, 42 ans</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- CTA Section -->
+    <section class="py-16 bg-gradient-to-r from-primary to-secondary text-white">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="text-3xl font-bold mb-6">Rejoignez notre communauté d'apprentissage</h2>
+                <p class="text-lg mb-8 opacity-90">Inscrivez-vous dès maintenant pour commencer votre voyage linguistique et culturel avec Nzassa School.</p>
+                
+                <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8">
+                    <button class="bg-white text-primary hover:bg-opacity-90 px-6 py-3 rounded-button font-medium text-base whitespace-nowrap">S'inscrire gratuitement</button>
+                    <button class="bg-transparent border border-white text-white hover:bg-white hover:bg-opacity-10 px-6 py-3 rounded-button font-medium text-base whitespace-nowrap">En savoir plus</button>
+                </div>
+                
+                <div class="flex flex-wrap justify-center gap-6 mt-8">
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                            <i class="ri-user-line text-white"></i>
+                        </div>
+                        <span class="text-sm font-medium">10K+ utilisateurs</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                            <i class="ri-translate-2-line text-white"></i>
+                        </div>
+                        <span class="text-sm font-medium">15+ langues</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <div class="w-10 h-10 rounded-full bg-white bg-opacity-20 flex items-center justify-center">
+                            <i class="ri-book-open-line text-white"></i>
+                        </div>
+                        <span class="text-sm font-medium">500+ leçons</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Newsletter Section -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-2">Restez informé</h2>
+                    <p class="text-gray-600">Abonnez-vous à notre newsletter pour recevoir les dernières actualités et mises à jour de Nzassa School.</p>
+                </div>
+                
+                <form class="flex flex-col sm:flex-row gap-3">
+                    <input type="email" placeholder="Votre adresse email" class="flex-grow px-4 py-3 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <button type="submit" class="bg-primary text-white hover:bg-opacity-90 px-6 py-3 rounded-button font-medium text-base whitespace-nowrap">S'abonner</button>
+                </form>
+                
+                <div class="mt-4 flex items-center">
+                    <label class="custom-switch">
+                        <input type="checkbox">
+                        <span class="slider"></span>
+                    </label>
+                    <span class="ml-3 text-sm text-gray-600">J'accepte de recevoir des informations sur les nouveautés et offres spéciales.</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white pt-12 pb-6">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <a href="#" class="text-2xl font-['Pacifico'] text-white mb-4 block">Nzassa School</a>
+                    <p class="text-gray-400 mb-4">Préserver et valoriser les langues et cultures de Côte d'Ivoire grâce à une plateforme éducative innovante.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+                            <i class="ri-facebook-fill"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+                            <i class="ri-twitter-x-fill"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+                            <i class="ri-instagram-fill"></i>
+                        </a>
+                        <a href="#" class="w-10 h-10 rounded-full bg-gray-700 flex items-center justify-center hover:bg-primary transition-colors">
+                            <i class="ri-youtube-fill"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Modules</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Apprendre ma langue</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Jeux éducatifs</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Histoires et Légendes</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Découvrir mon peuple</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Trésors en réalité virtuelle</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Liens utiles</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">À propos de nous</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Équipe</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Partenaires</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Blog</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Contact</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-map-pin-line text-primary"></i>
+                            </div>
+                            <span class="text-gray-400">Abidjan, Côte d'Ivoire</span>
+                        </li>
+                        <li class="flex items-center">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-mail-line text-primary"></i>
+                            </div>
+                            <span class="text-gray-400">contact@nzassaschool.ci</span>
+                        </li>
+                        <li class="flex items-center">
+                            <div class="w-5 h-5 flex items-center justify-center mr-2">
+                                <i class="ri-phone-line text-primary"></i>
+                            </div>
+                            <span class="text-gray-400">+225 07 XX XX XX XX</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-700 pt-6 mt-6">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <p class="text-gray-400 text-sm mb-4 md:mb-0">© 2025 Nzassa School. Tous droits réservés.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Conditions d'utilisation</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Politique de confidentialité</a>
+                        <a href="#" class="text-gray-400 hover:text-white text-sm transition-colors">Mentions légales</a>
+                    </div>
+                </div>
+                <div class="mt-4 text-center text-xs text-gray-500">
+                    <p>Développé avec <span class="text-red-500">♥</span> en utilisant Django</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script id="mobileMenuScript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const mobileMenuButton = document.querySelector('.md\\:hidden');
+            const mobileMenu = document.createElement('div');
+            mobileMenu.className = 'fixed inset-0 bg-gray-800 bg-opacity-95 z-50 transform translate-x-full transition-transform duration-300 ease-in-out';
+            mobileMenu.innerHTML = `
+                <div class="flex justify-end p-4">
+                    <button class="text-white w-10 h-10 flex items-center justify-center">
+                        <i class="ri-close-line text-2xl"></i>
+                    </button>
+                </div>
+                <div class="flex flex-col items-center justify-center h-full pb-20">
+                    <a href="#modules" class="text-white text-xl font-medium py-4">Modules</a>
+                    <a href="#features" class="text-white text-xl font-medium py-4">Fonctionnalités</a>
+                    <a href="#languages" class="text-white text-xl font-medium py-4">Langues</a>
+                    <a href="#about" class="text-white text-xl font-medium py-4">À propos</a>
+                    <div class="mt-8 flex flex-col gap-4">
+                        <button class="bg-white text-primary px-8 py-3 rounded-button font-medium">Se connecter</button>
+                        <button class="bg-primary text-white px-8 py-3 rounded-button font-medium">S'inscrire</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(mobileMenu);
+            
+            const closeButton = mobileMenu.querySelector('button');
+            const menuLinks = mobileMenu.querySelectorAll('a');
+            
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.remove('translate-x-full');
+            });
+            
+            closeButton.addEventListener('click', function() {
+                mobileMenu.classList.add('translate-x-full');
+            });
+            
+            menuLinks.forEach(link => {
+                link.addEventListener('click', function() {
+                    mobileMenu.classList.add('translate-x-full');
+                });
+            });
+        });
+    </script>
+
+    <script id="languageCardsScript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const languageCards = document.querySelectorAll('.language-card');
+            
+            languageCards.forEach(card => {
+                card.addEventListener('mouseenter', function() {
+                    this.querySelector('h3').classList.add('text-primary');
+                });
+                
+                card.addEventListener('mouseleave', function() {
+                    this.querySelector('h3').classList.remove('text-primary');
+                });
+            });
+        });
+    </script>
+</body>
+</html>

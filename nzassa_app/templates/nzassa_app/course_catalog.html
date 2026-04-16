@@ -1,0 +1,110 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Parcours | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .catalog-stack {
+        display: grid;
+        gap: 24px;
+    }
+
+    .catalog-hero,
+    .catalog-card {
+        padding: 30px;
+    }
+
+    .catalog-grid,
+    .experience-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 16px;
+    }
+
+    .catalog-item,
+    .experience-item {
+        padding: 22px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+    }
+
+    .tag {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(31, 107, 79, 0.1);
+        color: var(--forest);
+        font-size: 0.84rem;
+        font-weight: 700;
+    }
+
+    @media (max-width: 980px) {
+        .catalog-grid,
+        .experience-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="catalog-stack">
+    <section class="surface-card catalog-hero">
+        <p style="margin-top:0;color:var(--forest);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">
+            Catalogue produit
+        </p>
+        <h1 style="margin:0 0 12px;font-size:2.4rem;">Tous les parcours Nzassa School</h1>
+        <p style="max-width:70ch;line-height:1.75;">
+            Les parcours sont concus pour progresser de la decouverte a la pratique:
+            langue, culture, signes, immersion et conversation accompagnee par l'IA.
+        </p>
+    </section>
+
+    <section class="surface-card catalog-card">
+        <h2 style="margin-top:0;">Parcours disponibles</h2>
+        <div class="catalog-grid">
+            {% for course in courses %}
+                <article class="catalog-item">
+                    <span class="tag">{{ course.language.name }} - {{ course.get_focus_display }}</span>
+                    <h3>{{ course.title }}</h3>
+                    <p>{{ course.short_description }}</p>
+                    <ul style="padding-left:18px;line-height:1.7;">
+                        <li>{{ course.level }}</li>
+                        <li>{{ course.lesson_count }} lecons</li>
+                        <li>{{ course.estimated_minutes }} minutes estimees</li>
+                        <li>{% if course.is_premium %}Premium{% else %}Gratuit{% endif %}</li>
+                    </ul>
+                    <p style="margin-bottom:0;">
+                        <a href="{% url 'course_detail' course.slug %}">Voir le parcours</a>
+                    </p>
+                </article>
+            {% empty %}
+                <article class="catalog-item">
+                    <h3>Aucun parcours publie</h3>
+                    <p>Ajoutez des parcours depuis l'administration Django.</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="surface-card catalog-card">
+        <h2 style="margin-top:0;">Experiences differentiantes</h2>
+        <div class="experience-grid">
+            {% for experience in experiences %}
+                <article class="experience-item">
+                    <span class="tag">{{ experience.get_experience_type_display }}</span>
+                    <h3>{{ experience.title }}</h3>
+                    <p>{{ experience.description }}</p>
+                    {% if experience.cta_url %}
+                        <p style="margin-bottom:0;"><a href="{{ experience.cta_url }}">{{ experience.cta_label }}</a></p>
+                    {% endif %}
+                </article>
+            {% empty %}
+                <article class="experience-item">
+                    <h3>Experiences a configurer</h3>
+                    <p>Ajoutez VR, signes, culture ou IA pour enrichir votre proposition de valeur.</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

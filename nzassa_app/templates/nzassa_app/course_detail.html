@@ -1,0 +1,102 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}{{ course.title }} | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .detail-stack {
+        display: grid;
+        gap: 24px;
+    }
+
+    .detail-hero,
+    .detail-card {
+        padding: 30px;
+    }
+
+    .module-stack {
+        display: grid;
+        gap: 16px;
+    }
+
+    .module-card,
+    .lesson-card {
+        padding: 22px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+    }
+
+    .lesson-card + .lesson-card {
+        margin-top: 12px;
+    }
+
+    .cta {
+        display: inline-block;
+        padding: 14px 18px;
+        border-radius: 999px;
+        text-decoration: none;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--clay), var(--gold));
+        color: white;
+    }
+</style>
+
+<div class="detail-stack">
+    <section class="surface-card detail-hero">
+        <p style="margin-top:0;color:var(--forest);font-weight:700;">{{ course.language.name }} - {{ course.get_focus_display }}</p>
+        <h1 style="margin:0 0 10px;font-size:2.5rem;">{{ course.title }}</h1>
+        <p style="max-width:70ch;line-height:1.8;">{{ course.description }}</p>
+        <p>
+            Niveau: <strong>{{ course.level }}</strong> |
+            Duree estimee: <strong>{{ course.estimated_minutes }} min</strong> |
+            {% if course.is_premium %}<strong>Premium</strong>{% else %}<strong>Accessible gratuitement</strong>{% endif %}
+        </p>
+        {% if request.user.is_authenticated %}
+            {% if enrollment %}
+                <p style="margin-bottom:0;"><a class="cta" href="#modules">Continuer le parcours</a></p>
+            {% else %}
+                <p style="margin-bottom:0;"><a class="cta" href="{% url 'enroll_course' course.slug %}">Ajouter a mon dashboard</a></p>
+            {% endif %}
+        {% else %}
+            <p style="margin-bottom:0;"><a class="cta" href="{% url 'register' %}">Creer un compte pour commencer</a></p>
+        {% endif %}
+    </section>
+
+    <section class="surface-card detail-card" id="modules">
+        <h2 style="margin-top:0;">Modules et lecons</h2>
+        <div class="module-stack">
+            {% for module in modules %}
+                <article class="module-card">
+                    <h3 style="margin-top:0;">Module {{ module.order }} - {{ module.title }}</h3>
+                    <p>{{ module.summary }}</p>
+                    {% for lesson in module.lessons.all %}
+                        <article class="lesson-card">
+                            <h4 style="margin-top:0;">Lecon {{ lesson.order }} - {{ lesson.title }}</h4>
+                            <p>{{ lesson.content|truncatechars:180 }}</p>
+                            <p style="margin-bottom:0;">
+                                Type: {{ lesson.get_lesson_type_display }} |
+                                {{ lesson.estimated_minutes }} min |
+                                {{ lesson.xp_reward }} XP
+                            </p>
+                            {% if request.user.is_authenticated %}
+                                <p style="margin-bottom:0;margin-top:14px;">
+                                    <a href="{% url 'lesson_detail' course.slug lesson.id %}">Ouvrir la lecon</a>
+                                </p>
+                            {% endif %}
+                        </article>
+                    {% empty %}
+                        <article class="lesson-card">
+                            <p style="margin:0;">Aucune lecon pour ce module.</p>
+                        </article>
+                    {% endfor %}
+                </article>
+            {% empty %}
+                <article class="module-card">
+                    <p style="margin:0;">Ce parcours n'a pas encore de modules.</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}

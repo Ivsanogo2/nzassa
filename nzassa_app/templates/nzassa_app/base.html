@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Nzassa School{% endblock %}</title>
+    <style>
+        @import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Space+Grotesk:wght@500;700&display=swap");
+
+        :root {
+            --sand: #f7efe2;
+            --clay: #c45a2d;
+            --gold: #f1b24a;
+            --forest: #155e4b;
+            --ink: #101817;
+            --lagoon: #08304d;
+            --mist: rgba(255, 248, 239, 0.78);
+            --card: rgba(255, 251, 245, 0.78);
+            --line: rgba(16, 24, 23, 0.08);
+            --shadow: 0 28px 70px rgba(16, 24, 23, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            font-family: "Manrope", "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(241, 178, 74, 0.26), transparent 28%),
+                radial-gradient(circle at top right, rgba(21, 94, 75, 0.2), transparent 24%),
+                linear-gradient(180deg, #fffaf3 0%, #f6efdf 48%, #efe2cd 100%);
+            min-height: 100vh;
+        }
+
+        body::before,
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        body::before {
+            background-image:
+                linear-gradient(rgba(16, 24, 23, 0.025) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(16, 24, 23, 0.025) 1px, transparent 1px);
+            background-size: 36px 36px;
+        }
+
+        body::after {
+            background:
+                radial-gradient(circle at 20% 15%, rgba(196, 90, 45, 0.09), transparent 18%),
+                radial-gradient(circle at 80% 20%, rgba(8, 48, 77, 0.08), transparent 20%),
+                radial-gradient(circle at 50% 100%, rgba(241, 178, 74, 0.08), transparent 28%);
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .site-shell {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+        }
+
+        .site-header {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(14px);
+            background: rgba(255, 250, 244, 0.72);
+            border-bottom: 1px solid rgba(16, 24, 23, 0.07);
+        }
+
+        .site-header-inner {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 0;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            text-decoration: none;
+        }
+
+        .brand-badge {
+            width: 48px;
+            height: 48px;
+            display: grid;
+            place-items: center;
+            border-radius: 18px;
+            background:
+                radial-gradient(circle at 25% 25%, rgba(255, 255, 255, 0.28), transparent 35%),
+                linear-gradient(135deg, var(--clay), var(--gold));
+            color: white;
+            font-weight: 900;
+            letter-spacing: 0.08em;
+            box-shadow: 0 16px 34px rgba(196, 90, 45, 0.3);
+        }
+
+        .brand-copy strong {
+            display: block;
+            font-size: 1rem;
+            font-family: "Space Grotesk", sans-serif;
+            letter-spacing: 0.03em;
+        }
+
+        .brand-copy span {
+            display: block;
+            font-size: 0.84rem;
+            color: rgba(16, 24, 23, 0.7);
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            padding: 10px 14px;
+            border-radius: 999px;
+            font-size: 0.95rem;
+            transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .nav-links a:hover {
+            transform: translateY(-1px);
+            background: rgba(8, 48, 77, 0.07);
+            color: var(--lagoon);
+        }
+
+        .nav-links .nav-cta {
+            background: linear-gradient(135deg, var(--forest), #2f936b);
+            color: white;
+            box-shadow: 0 14px 28px rgba(21, 94, 75, 0.24);
+        }
+
+        .nav-links .nav-cta:hover {
+            color: white;
+            box-shadow: 0 18px 32px rgba(21, 94, 75, 0.28);
+        }
+
+        .page-content {
+            padding: 34px 0 64px;
+        }
+
+        .flash-messages {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 18px;
+        }
+
+        .flash-message {
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(21, 94, 75, 0.18);
+            background: rgba(21, 94, 75, 0.1);
+            color: var(--forest);
+            box-shadow: 0 10px 24px rgba(16, 24, 23, 0.06);
+        }
+
+        .surface-card {
+            background: var(--card);
+            border: 1px solid rgba(255, 255, 255, 0.48);
+            border-radius: 28px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+        }
+
+        footer {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 0 0 40px;
+            color: rgba(16, 24, 23, 0.7);
+            font-size: 0.92rem;
+        }
+
+        @media (max-width: 900px) {
+            .site-header-inner {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            .nav-links {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .site-shell,
+            .site-header-inner,
+            footer {
+                width: min(100% - 20px, 1180px);
+            }
+
+            .nav-links a {
+                padding: 9px 12px;
+                font-size: 0.9rem;
+            }
+
+            .page-content {
+                padding-top: 22px;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header-inner">
+            <a class="brand" href="{% url 'accueil' %}">
+                <div class="brand-badge">NZ</div>
+                <div class="brand-copy">
+                    <strong>Nzassa School</strong>
+                    <span>Langues africaines, culture, IA, VR et signes</span>
+                </div>
+            </a>
+
+            <nav class="nav-links">
+                <a href="{% url 'accueil' %}#vision">Vision</a>
+                <a href="{% url 'course_catalog' %}">Parcours</a>
+                <a href="{% url 'ai_coach' %}">Coach IA</a>
+                <a href="{% url 'accueil' %}#roadmap">Roadmap</a>
+                <a href="{% url 'pricing' %}">Premium</a>
+                <a href="{% url 'ia_signes' %}">Langue des signes</a>
+                <a href="{% url 'immersion' %}">Mode VR</a>
+                {% if request.user.is_authenticated %}
+                    <a href="{% url 'dashboard' %}">Dashboard</a>
+                    <a class="nav-cta" href="{% url 'logout' %}">Deconnexion</a>
+                {% else %}
+                    <a href="{% url 'login' %}">Connexion</a>
+                    <a class="nav-cta" href="{% url 'register' %}">Commencer</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <div class="site-shell">
+            {% if messages %}
+                <div class="flash-messages">
+                    {% for message in messages %}
+                        <div class="flash-message">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer>
+        &copy; 2026 Nzassa School. Preserver les racines africaines par la technologie, l'apprentissage et l'immersion.
+    </footer>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

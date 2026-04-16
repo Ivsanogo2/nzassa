@@ -1,0 +1,121 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}{{ lesson.title }} | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .lesson-shell {
+        display: grid;
+        gap: 24px;
+    }
+
+    .lesson-card {
+        padding: 30px;
+    }
+
+    .quiz-form {
+        display: grid;
+        gap: 18px;
+    }
+
+    .question-card {
+        padding: 20px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.72);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+    }
+
+    .question-card label {
+        display: block;
+        margin-top: 10px;
+    }
+
+    .submit-btn {
+        border: none;
+        border-radius: 999px;
+        padding: 14px 20px;
+        background: linear-gradient(135deg, var(--forest), #2f936b);
+        color: white;
+        font-weight: 700;
+        cursor: pointer;
+    }
+
+    .result-card {
+        padding: 20px;
+        border-radius: 20px;
+        background: rgba(31, 107, 79, 0.1);
+        border: 1px solid rgba(31, 107, 79, 0.18);
+    }
+</style>
+
+<div class="lesson-shell">
+    <section class="surface-card lesson-card">
+        <p style="margin-top:0;color:var(--forest);font-weight:700;">
+            {{ course.title }} - {{ lesson.module.title }}
+        </p>
+        <h1 style="margin:0 0 12px;">{{ lesson.title }}</h1>
+        <p style="line-height:1.8;">{{ lesson.content }}</p>
+        {% if lesson.culture_note %}
+            <div class="result-card" style="background:rgba(13,59,102,0.08);border-color:rgba(13,59,102,0.12);">
+                <strong>Note culturelle</strong>
+                <p style="margin-bottom:0;">{{ lesson.culture_note }}</p>
+            </div>
+        {% endif %}
+        {% if lesson.key_phrase %}
+            <p><strong>Phrase cle:</strong> {{ lesson.key_phrase }}</p>
+        {% endif %}
+        <p style="margin-bottom:0;">Progression actuelle sur cette lecon: {{ progress.score }}%</p>
+    </section>
+
+    <section class="surface-card lesson-card">
+        <h2 style="margin-top:0;">Quiz de validation</h2>
+        <form method="post" class="quiz-form">
+            {% csrf_token %}
+            {% for question in questions %}
+                <article class="question-card">
+                    <h3 style="margin-top:0;">{{ forloop.counter }}. {{ question.prompt }}</h3>
+                    <label><input type="radio" name="question_{{ question.id }}" value="A"> A. {{ question.choice_a }}</label>
+                    <label><input type="radio" name="question_{{ question.id }}" value="B"> B. {{ question.choice_b }}</label>
+                    <label><input type="radio" name="question_{{ question.id }}" value="C"> C. {{ question.choice_c }}</label>
+                    <label><input type="radio" name="question_{{ question.id }}" value="D"> D. {{ question.choice_d }}</label>
+                </article>
+            {% empty %}
+                <article class="question-card">
+                    <p style="margin:0;">Aucune question pour cette lecon. Ajoutez-en dans l'administration.</p>
+                </article>
+            {% endfor %}
+            {% if questions %}
+                <button type="submit" class="submit-btn">Valider la lecon</button>
+            {% endif %}
+        </form>
+    </section>
+
+    {% if submission %}
+        <section class="surface-card lesson-card">
+            <div class="result-card">
+                <h2 style="margin-top:0;">Resultat</h2>
+                <p>
+                    Score: <strong>{{ submission.score }}%</strong> -
+                    {{ submission.correct_answers }}/{{ submission.total_questions }} bonnes reponses.
+                </p>
+                <p>Progression du parcours: {{ submission.enrollment.progress_percent }}%</p>
+            </div>
+            <div style="display:grid;gap:14px;margin-top:16px;">
+                {% for result in submission.results %}
+                    <article class="question-card">
+                        <h3 style="margin-top:0;">{{ result.question.prompt }}</h3>
+                        <p>
+                            Votre reponse: <strong>{{ result.selected|default:"Aucune" }}</strong> |
+                            Bonne reponse: <strong>{{ result.question.correct_choice }}</strong>
+                        </p>
+                        <p style="margin-bottom:0;">
+                            {% if result.is_correct %}Bonne reponse.{% else %}A revoir.{% endif %}
+                            {{ result.question.explanation }}
+                        </p>
+                    </article>
+                {% endfor %}
+            </div>
+        </section>
+    {% endif %}
+</div>
+{% endblock %}

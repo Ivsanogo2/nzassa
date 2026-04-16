@@ -1,0 +1,194 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Dashboard | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .dashboard-stack {
+        display: grid;
+        gap: 24px;
+    }
+
+    .dashboard-hero,
+    .dashboard-card {
+        padding: 30px;
+    }
+
+    .dashboard-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr);
+        gap: 18px;
+        align-items: start;
+    }
+
+    .dashboard-hero h1 {
+        margin-top: 0;
+        margin-bottom: 10px;
+        font-size: 2.2rem;
+    }
+
+    .stat-grid,
+    .course-grid,
+    .badge-grid {
+        display: grid;
+        gap: 16px;
+    }
+
+    .stat-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .course-grid,
+    .badge-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .mini-card {
+        padding: 18px;
+        border-radius: 20px;
+        background: rgba(255, 255, 255, 0.64);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+    }
+
+    .mini-card strong {
+        display: block;
+        font-size: 1.7rem;
+        margin-bottom: 6px;
+    }
+
+    .course-card {
+        padding: 20px;
+        border-radius: 22px;
+        background: rgba(255, 255, 255, 0.7);
+        border: 1px solid rgba(20, 33, 29, 0.1);
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 10px;
+        border-radius: 999px;
+        background: rgba(20, 33, 29, 0.08);
+        overflow: hidden;
+        margin-top: 10px;
+    }
+
+    .progress-bar span {
+        display: block;
+        height: 100%;
+        background: linear-gradient(135deg, var(--clay), var(--gold));
+        border-radius: inherit;
+    }
+
+    @media (max-width: 960px) {
+        .dashboard-hero,
+        .stat-grid,
+        .course-grid,
+        .badge-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="dashboard-stack">
+    <section class="surface-card dashboard-hero">
+        <div>
+            <p style="margin-top:0;color:var(--forest);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">
+                Tableau de bord apprenant
+            </p>
+            <h1>Bonjour {{ request.user.first_name|default:request.user.username }}</h1>
+            <p>
+                Votre parcours est centralise ici: progression, badges, quiz et prochaines etapes.
+                {% if profile.selected_language %}
+                    Langue cible actuelle: <strong>{{ profile.selected_language.name }}</strong>.
+                {% endif %}
+            </p>
+        </div>
+        <div class="mini-card" style="background:linear-gradient(135deg, var(--lagoon), var(--forest));color:white;">
+            <strong>{{ profile.total_xp }} XP</strong>
+            <div>Streak: {{ profile.streak_days }} jour{{ profile.streak_days|pluralize }}</div>
+            <div>Niveau: {{ profile.get_level_display }}</div>
+            <div>Objectif: {{ profile.get_goal_display }}</div>
+            <div style="margin-top:10px;">{% if profile.is_premium %}Compte premium actif{% else %}Compte gratuit{% endif %}</div>
+        </div>
+    </section>
+
+    <section class="surface-card dashboard-card">
+        <div class="stat-grid">
+            <div class="mini-card">
+                <strong>{{ enrollments|length }}</strong>
+                <span>parcours actifs</span>
+            </div>
+            <div class="mini-card">
+                <strong>{{ completed_lessons }}</strong>
+                <span>lecons completees</span>
+            </div>
+            <div class="mini-card">
+                <strong>{{ quiz_attempts }}</strong>
+                <span>quiz realises</span>
+            </div>
+            <div class="mini-card">
+                <strong>{{ avg_score }}%</strong>
+                <span>score moyen</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="surface-card dashboard-card">
+        <h2 style="margin-top:0;">Mes parcours</h2>
+        <div class="course-grid">
+            {% for enrollment in enrollments %}
+                <article class="course-card">
+                    <h3 style="margin-top:0;">{{ enrollment.course.title }}</h3>
+                    <p>{{ enrollment.course.short_description }}</p>
+                    <p style="margin-bottom:0;">{{ enrollment.progress_percent }}% complete</p>
+                    <div class="progress-bar"><span style="width: {{ enrollment.progress_percent }}%;"></span></div>
+                    <p style="margin-top:14px;margin-bottom:0;">
+                        <a href="{% url 'course_detail' enrollment.course.slug %}">Continuer</a>
+                    </p>
+                </article>
+            {% empty %}
+                <article class="course-card">
+                    <h3 style="margin-top:0;">Aucun parcours encore</h3>
+                    <p>Commencez par choisir un parcours de langue, culture, signes ou immersion.</p>
+                    <p style="margin-bottom:0;"><a href="{% url 'course_catalog' %}">Voir les parcours</a></p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="surface-card dashboard-card">
+        <h2 style="margin-top:0;">Badges obtenus</h2>
+        <div class="badge-grid">
+            {% for user_badge in earned_badges %}
+                <article class="course-card">
+                    <h3 style="margin-top:0;">{{ user_badge.badge.name }}</h3>
+                    <p>{{ user_badge.badge.description }}</p>
+                </article>
+            {% empty %}
+                <article class="course-card">
+                    <h3 style="margin-top:0;">Premier badge en vue</h3>
+                    <p>Completez vos premieres lecons pour debloquer vos badges.</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="surface-card dashboard-card">
+        <h2 style="margin-top:0;">Recommandations</h2>
+        <div class="course-grid">
+            {% for course in recommended_courses %}
+                <article class="course-card">
+                    <h3 style="margin-top:0;">{{ course.title }}</h3>
+                    <p>{{ course.short_description }}</p>
+                    <p style="margin-bottom:0;"><a href="{% url 'course_detail' course.slug %}">Voir le parcours</a></p>
+                </article>
+            {% empty %}
+                <article class="course-card">
+                    <h3 style="margin-top:0;">Tout est deja lance</h3>
+                    <p>Vous avez deja commence tous les parcours disponibles pour l'instant.</p>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+</div>
+{% endblock %}
