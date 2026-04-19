@@ -14,14 +14,19 @@
     .coach-form { display: grid; gap: 14px; margin-top: 20px; }
     .coach-form input { width: 100%; border-radius: 18px; border: 1px solid rgba(16, 24, 23, 0.12); padding: 16px 18px; font-size: 1rem; background: rgba(255, 255, 255, 0.95); }
     .coach-form button { width: fit-content; border: none; border-radius: 999px; padding: 14px 20px; font-weight: 800; cursor: pointer; color: white; background: linear-gradient(135deg, var(--clay), var(--gold)); box-shadow: 0 16px 28px rgba(196, 90, 45, 0.24); }
-    .coach-grid, .word-grid, .course-grid { display: grid; gap: 16px; }
+    .coach-grid, .word-grid, .course-grid, .lab-grid, .practice-grid { display: grid; gap: 16px; }
     .coach-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
-    .word-grid, .course-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .answer-box, .mini-box, .word-card, .course-card { padding: 20px; border-radius: 22px; border: 1px solid rgba(16, 24, 23, 0.08); background: rgba(255, 255, 255, 0.62); }
+    .word-grid, .course-grid, .lab-grid, .practice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .answer-box, .mini-box, .word-card, .course-card, .lab-card, .practice-card { padding: 20px; border-radius: 22px; border: 1px solid rgba(16, 24, 23, 0.08); background: rgba(255, 255, 255, 0.62); }
     .answer-box ul, .mini-box ul { margin: 14px 0 0; padding-left: 18px; line-height: 1.75; }
     .word-card strong, .course-card strong { display: block; margin-bottom: 6px; font-size: 1.1rem; }
     .meta { color: rgba(16, 24, 23, 0.62); font-size: 0.92rem; line-height: 1.6; }
-    @media (max-width: 980px) { .coach-hero, .coach-grid, .word-grid, .course-grid { grid-template-columns: 1fr; } }
+    .coach-bubble { border-radius: 22px; padding: 18px 20px; background: linear-gradient(135deg, rgba(196, 90, 45, 0.1), rgba(241, 178, 74, 0.14)); border: 1px solid rgba(196, 90, 45, 0.18); line-height: 1.8; }
+    .speak-btn, .ghost-btn { border: none; border-radius: 999px; padding: 11px 16px; font-weight: 800; cursor: pointer; }
+    .speak-btn { color: white; background: linear-gradient(135deg, var(--clay), var(--gold)); }
+    .ghost-btn { background: rgba(8, 48, 77, 0.08); color: var(--lagoon); }
+    .practice-card .status { color: var(--forest); font-weight: 700; }
+    @media (max-width: 980px) { .coach-hero, .coach-grid, .word-grid, .course-grid, .lab-grid, .practice-grid { grid-template-columns: 1fr; } }
 </style>
 
 <div class="coach-stack">
@@ -31,7 +36,7 @@
             <h1>Un coach qui relie les mots, les parcours et les lecons.</h1>
             <p style="line-height:1.8;color:rgba(16,24,23,0.8);">
                 Cette IA locale n'attend pas une API externe pour etre utile. Elle apprend deja les mots presents
-                dans la plateforme, les transforme en suggestions et te renvoie vers les bons contenus.
+                dans la plateforme, les transforme en suggestions, puis ajoute une pratique orale et un rythme de repetition.
             </p>
             <form method="get" class="coach-form">
                 <input type="text" name="prompt" value="{{ prompt }}" placeholder="Exemple: apprends-moi bonjour, mots pour voyager, ou baoule debutant">
@@ -54,6 +59,7 @@
     <section class="coach-grid">
         <article class="surface-card coach-card">
             <h2>{{ guidance.headline }}</h2>
+            <div class="coach-bubble">{{ guidance.conversation_opening }}</div>
             <div class="answer-box">
                 <p style="margin-top:0;line-height:1.8;">{{ guidance.summary }}</p>
                 <ul>
@@ -90,6 +96,43 @@
     </section>
 
     <section class="surface-card coach-card">
+        <h2>Laboratoire oral</h2>
+        <div class="lab-grid">
+            {% for card in guidance.pronunciation_cards %}
+                <article class="lab-card" data-word="{{ card.word }}" data-voice="{{ card.voice }}">
+                    <strong>{{ card.word }}</strong>
+                    <div class="meta">{{ card.language }} · origine: {{ card.origin }}</div>
+                    <p style="line-height:1.7;">{{ card.pronunciation_tip }}</p>
+                    <p class="meta" style="margin-bottom:14px;">{{ card.coach_prompt }}</p>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                        <button type="button" class="speak-btn js-speak-word">Ecouter</button>
+                        <button type="button" class="ghost-btn js-repeat-word">Repeter</button>
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    </section>
+
+    <section class="surface-card coach-card">
+        <h2>Apprentissage interactif</h2>
+        <div class="practice-grid">
+            <article class="practice-card">
+                <strong>Routine en 3 temps</strong>
+                <ul style="line-height:1.8;">
+                    {% for step in guidance.practice_loop %}
+                        <li>{{ step }}</li>
+                    {% endfor %}
+                </ul>
+            </article>
+            <article class="practice-card">
+                <strong>Mode repetition</strong>
+                <p id="repeat-target" style="line-height:1.8;">Choisis un mot du laboratoire oral, puis clique sur "Repeter".</p>
+                <p id="repeat-status" class="status">Pret a guider une repetition.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="surface-card coach-card">
         <h2>Mots que l'IA a appris seule</h2>
         <div class="word-grid">
             {% for item in guidance.discovered_vocabulary %}
@@ -103,4 +146,50 @@
         </div>
     </section>
 </div>
+{{ guidance.pronunciation_cards|json_script:"coach-pronunciations" }}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    const speech = window.speechSynthesis;
+    const repeatTarget = document.getElementById("repeat-target");
+    const repeatStatus = document.getElementById("repeat-status");
+    const pronunciationCards = JSON.parse(document.getElementById("coach-pronunciations").textContent);
+
+    function speakText(text, lang) {
+        if (!speech || !text) {
+            return;
+        }
+        speech.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = lang || "fr-FR";
+        utterance.rate = 0.88;
+        utterance.pitch = 1.02;
+        speech.speak(utterance);
+    }
+
+    document.querySelectorAll(".js-speak-word").forEach((button, index) => {
+        button.addEventListener("click", () => {
+            const item = pronunciationCards[index];
+            if (!item) {
+                return;
+            }
+            speakText(`${item.word}. ${item.coach_prompt}`, item.voice);
+            repeatStatus.textContent = `Ecoute active pour ${item.word}.`;
+        });
+    });
+
+    document.querySelectorAll(".js-repeat-word").forEach((button, index) => {
+        button.addEventListener("click", () => {
+            const item = pronunciationCards[index];
+            if (!item) {
+                return;
+            }
+            repeatTarget.textContent = `Repete maintenant: ${item.word}. Puis dis une phrase avec ce mot.`;
+            repeatStatus.textContent = `Exercice lance pour ${item.word}.`;
+            speakText(`Repete apres moi. ${item.word}`, item.voice);
+            window.setTimeout(() => speakText(item.word, item.voice), 1600);
+        });
+    });
+</script>
 {% endblock %}

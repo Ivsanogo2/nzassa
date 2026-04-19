@@ -133,29 +133,44 @@
             justify-content: flex-end;
         }
 
-        .nav-links a {
+        .nav-links a,
+        .logout-btn {
             text-decoration: none;
             padding: 10px 14px;
             border-radius: 999px;
             font-size: 0.95rem;
             transition: transform 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+            background: transparent;
         }
 
-        .nav-links a:hover {
+        .nav-links a:hover,
+        .logout-btn:hover {
             transform: translateY(-1px);
             background: rgba(8, 48, 77, 0.07);
             color: var(--lagoon);
         }
 
-        .nav-links .nav-cta {
+        .nav-links .nav-cta,
+        .logout-btn.nav-cta {
             background: linear-gradient(135deg, var(--forest), #2f936b);
             color: white;
             box-shadow: 0 14px 28px rgba(21, 94, 75, 0.24);
         }
 
-        .nav-links .nav-cta:hover {
+        .nav-links .nav-cta:hover,
+        .logout-btn.nav-cta:hover {
             color: white;
             box-shadow: 0 18px 32px rgba(21, 94, 75, 0.28);
+        }
+
+        .logout-form {
+            margin: 0;
+        }
+
+        .logout-btn {
+            border: none;
+            font: inherit;
+            cursor: pointer;
         }
 
         .page-content {
@@ -236,16 +251,17 @@
             </a>
 
             <nav class="nav-links">
-                <a href="{% url 'accueil' %}#vision">Vision</a>
-                <a href="{% url 'course_catalog' %}">Parcours</a>
-                <a href="{% url 'ai_coach' %}">Coach IA</a>
-                <a href="{% url 'accueil' %}#roadmap">Roadmap</a>
-                <a href="{% url 'pricing' %}">Premium</a>
-                <a href="{% url 'ia_signes' %}">Langue des signes</a>
-                <a href="{% url 'immersion' %}">Mode VR</a>
+                <a href="{% url 'accueil' %}#modules">Modules</a>
+                <a href="{% url 'accueil' %}#ai-lab">IA</a>
+                <a href="{% url 'accueil' %}#jouer">Jeux</a>
+                <a href="{% url 'accueil' %}#langues">Langues</a>
+                <a href="{% url 'immersion' %}">VR</a>
                 {% if request.user.is_authenticated %}
                     <a href="{% url 'dashboard' %}">Dashboard</a>
-                    <a class="nav-cta" href="{% url 'logout' %}">Deconnexion</a>
+                    <form method="post" action="{% url 'logout' %}" class="logout-form">
+                        {% csrf_token %}
+                        <button type="submit" class="nav-cta logout-btn">Deconnexion</button>
+                    </form>
                 {% else %}
                     <a href="{% url 'login' %}">Connexion</a>
                     <a class="nav-cta" href="{% url 'register' %}">Commencer</a>

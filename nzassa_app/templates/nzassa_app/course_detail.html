@@ -35,10 +35,12 @@
         display: inline-block;
         padding: 14px 18px;
         border-radius: 999px;
-        text-decoration: none;
         font-weight: 700;
         background: linear-gradient(135deg, var(--clay), var(--gold));
         color: white;
+        border: none;
+        text-decoration: none;
+        cursor: pointer;
     }
 </style>
 
@@ -56,7 +58,10 @@
             {% if enrollment %}
                 <p style="margin-bottom:0;"><a class="cta" href="#modules">Continuer le parcours</a></p>
             {% else %}
-                <p style="margin-bottom:0;"><a class="cta" href="{% url 'enroll_course' course.slug %}">Ajouter a mon dashboard</a></p>
+                <form method="post" action="{% url 'enroll_course' course.slug %}" style="margin-bottom:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="cta">Ajouter a mon dashboard</button>
+                </form>
             {% endif %}
         {% else %}
             <p style="margin-bottom:0;"><a class="cta" href="{% url 'register' %}">Creer un compte pour commencer</a></p>

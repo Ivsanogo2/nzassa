@@ -20,6 +20,11 @@
         gap: 16px;
     }
 
+    .field-card {
+        display: grid;
+        gap: 8px;
+    }
+
     .full-span {
         grid-column: 1 / -1;
     }
@@ -68,7 +73,7 @@
         <form method="post" class="auth-grid">
             {% csrf_token %}
             {% for field in form %}
-                <div class="{% if field.name == 'username' or field.name == 'selected_language' or field.name == 'password1' or field.name == 'password2' %}{% else %}{% endif %}{% if field.name == 'goal' or field.name == 'level' or field.name == 'email' or field.name == 'first_name' %}{% endif %}">
+                <div class="field-card {% if field.name == 'password1' or field.name == 'password2' %}full-span{% endif %}">
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
                     {{ field }}
                     {% if field.help_text %}

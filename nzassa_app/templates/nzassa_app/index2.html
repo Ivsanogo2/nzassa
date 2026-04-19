@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+
+<style>
+.hero-section {
+    background-image: linear-gradient(to right, rgba(255,255,255,0.9) 40%, rgba(255,255,255,0.4) 70%, rgba(255,255,255,0) 100%), 
+    url('https://readdy.ai/api/search-image?query=A%20vibrant%20African%20education%20scene%20children%20learning%20culture&width=1200&height=600');
+    background-size: cover;
+    background-position: center;
+}
+.module-card:hover {
+    transform: translateY(-8px);
+    transition: 0.3s;
+}
+.language-card:hover {
+    transform: scale(1.05);
+    transition: 0.3s;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="bg-white text-gray-800">
+
+<!-- HERO -->
+<section class="hero-section py-20 px-6">
+    <div class="max-w-2xl">
+        <h1 class="text-5xl font-bold mb-6">
+            Préservons nos langues africaines
+        </h1>
+
+        <p class="text-lg mb-6">
+            Nzassa School utilise l’IA, les jeux et la VR pour apprendre les langues ivoiriennes facilement.
+        </p>
+
+        <div class="flex gap-4">
+            <a href="{% url 'signup' %}" class="bg-orange-500 text-white px-6 py-3 rounded-lg">
+                Commencer
+            </a>
+
+            <a href="#modules" class="border px-6 py-3 rounded-lg">
+                Découvrir
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- MODULES -->
+<section id="modules" class="py-16 bg-gray-50">
+    <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold">Nos modules</h2>
+    </div>
+
+    <div class="grid md:grid-cols-3 gap-6 px-6">
+
+        <div class="module-card bg-white rounded-lg shadow">
+            <img src="https://readdy.ai/api/search-image?query=African%20children%20learning%20language&width=600&height=400" class="w-full h-48 object-cover">
+            <div class="p-4">
+                <h3 class="font-bold text-xl">Apprendre ma langue</h3>
+                <p>Leçons interactives avec IA</p>
+                <a href="{% url 'apprendre_ma_langue' %}" class="text-orange-500">Voir →</a>
+            </div>
+        </div>
+
+        <div class="module-card bg-white rounded-lg shadow">
+            <img src="https://readdy.ai/api/search-image?query=kids%20playing%20educational%20games&width=600&height=400" class="w-full h-48 object-cover">
+            <div class="p-4">
+                <h3 class="font-bold text-xl">Jeux éducatifs</h3>
+                <p>Apprendre en jouant</p>
+                <a href="{% url 'jeu' langue='bete' %}" class="text-orange-500">Voir →</a>
+            </div>
+        </div>
+
+        <div class="module-card bg-white rounded-lg shadow">
+            <img src="https://readdy.ai/api/search-image?query=African%20storytelling%20children&width=600&height=400" class="w-full h-48 object-cover">
+            <div class="p-4">
+                <h3 class="font-bold text-xl">Histoires</h3>
+                <p>Culture et traditions</p>
+                <a href="{% url 'histoires' langue='bete' %}" class="text-orange-500">Voir →</a>
+            </div>
+        </div>
+
+    </div>
+</section>
+
+<!-- LANGUES -->
+<section class="py-16">
+    <div class="text-center mb-10">
+        <h2 class="text-3xl font-bold">Langues disponibles</h2>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-6">
+
+        {% for lang in languages %}
+        <div class="language-card bg-white shadow rounded p-4 text-center">
+            <h3 class="font-bold">{{ lang.name }}</h3>
+            <p class="text-sm text-gray-500">{{ lang.count }} leçons</p>
+        </div>
+        {% endfor %}
+
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="py-16 bg-orange-500 text-white text-center">
+    <h2 class="text-3xl font-bold mb-6">
+        Rejoins Nzassa School
+    </h2>
+
+    <a href="{% url 'signup' %}" class="bg-white text-orange-500 px-6 py-3 rounded-lg">
+        S'inscrire
+    </a>
+</section>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+console.log("Nzassa School prêt 🚀");
+</script>
+{% endblock %}

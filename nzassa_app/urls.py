@@ -1,4 +1,3 @@
-from django.contrib.auth.views import LogoutView
 from django.urls import path
 
 from .views import (
@@ -11,7 +10,9 @@ from .views import (
     enroll_course,
     chercher_mot,
     immersion_vr,
+    landing_ai_chat,
     lesson_detail,
+    logout_view,
     pricing,
     reconnaissance_signes,
     register,
@@ -28,8 +29,9 @@ urlpatterns = [
     path("tarifs/", pricing, name="pricing"),
     path("connexion/", NzassaLoginView.as_view(), name="login"),
     path("inscription/", register, name="register"),
-    path("deconnexion/", LogoutView.as_view(), name="logout"),
+    path("deconnexion/", logout_view, name="logout"),
     path("ia-signes/", reconnaissance_signes, name="ia_signes"),
     path("immersion/", immersion_vr, name="immersion"),
     path("chercher/", chercher_mot, name="chercher_mot"),
+    path("api/landing-ai/", landing_ai_chat, name="landing_ai_chat"),
 ]

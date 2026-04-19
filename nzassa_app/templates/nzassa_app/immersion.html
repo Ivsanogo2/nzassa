@@ -4,154 +4,31 @@
 
 {% block content %}
 <style>
-    .vr-shell {
-        display: grid;
-        gap: 24px;
-    }
-
-    .vr-hero,
-    .vr-card {
-        padding: 28px;
-    }
-
-    .vr-hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.15fr) minmax(280px, 0.85fr);
-        gap: 18px;
-        align-items: start;
-    }
-
-    .vr-hero h1 {
-        margin: 8px 0 12px;
-        font-size: clamp(2rem, 4vw, 3.4rem);
-    }
-
-    .vr-layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
-        gap: 18px;
-    }
-
-    .vr-container {
-        position: relative;
-        width: 100%;
-        height: 78vh;
-        min-height: 560px;
-        border-radius: 26px;
-        overflow: hidden;
-        background: #05131b;
-        border: 1px solid rgba(20, 33, 29, 0.12);
-        box-shadow: 0 28px 54px rgba(20, 33, 29, 0.16);
-    }
-
-    #ui-overlay {
-        position: absolute;
-        left: 20px;
-        right: 20px;
-        bottom: 18px;
-        z-index: 20;
-        background: rgba(5, 19, 27, 0.78);
-        color: white;
-        padding: 14px 18px;
-        border-radius: 20px;
-        border: 1px solid rgba(244, 185, 66, 0.22);
-        backdrop-filter: blur(10px);
-        line-height: 1.6;
-    }
-
-    .overlay-title {
-        display: block;
-        font-weight: 800;
-        margin-bottom: 4px;
-    }
-
-    .hud-top {
-        position: absolute;
-        top: 18px;
-        left: 18px;
-        right: 18px;
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        flex-wrap: wrap;
-        z-index: 20;
-    }
-
-    .hud-chip,
-    .info-card,
-    .check-card {
-        padding: 12px 14px;
-        border-radius: 18px;
-        background: rgba(255, 255, 255, 0.76);
-        border: 1px solid rgba(20, 33, 29, 0.1);
-    }
-
-    .hud-chip {
-        background: rgba(5, 19, 27, 0.72);
-        color: white;
-        border-color: rgba(255, 255, 255, 0.08);
-    }
-
-    .sidebar-stack {
-        display: grid;
-        gap: 16px;
-    }
-
-    .journey-list {
-        list-style: none;
-        padding: 0;
-        margin: 14px 0 0;
-        display: grid;
-        gap: 10px;
-    }
-
-    .journey-list li {
-        padding: 12px 14px;
-        border-radius: 16px;
-        background: rgba(255, 255, 255, 0.82);
-        border: 1px solid rgba(20, 33, 29, 0.08);
-    }
-
-    .journey-list li.done {
-        background: rgba(31, 107, 79, 0.14);
-        border-color: rgba(31, 107, 79, 0.18);
-    }
-
-    .action-row {
-        display: flex;
-        gap: 10px;
-        flex-wrap: wrap;
-        margin-top: 14px;
-    }
-
-    .action-btn {
-        border: none;
-        border-radius: 999px;
-        padding: 12px 16px;
-        cursor: pointer;
-        font-weight: 700;
-    }
-
-    .action-btn.primary {
-        background: linear-gradient(135deg, var(--clay), var(--gold));
-        color: white;
-    }
-
-    .action-btn.secondary {
-        background: rgba(13, 59, 102, 0.08);
-        color: var(--lagoon);
-    }
-
+    .vr-shell, .preset-grid, .sidebar-stack { display: grid; gap: 20px; }
+    .vr-hero, .vr-card { padding: 28px; }
+    .vr-hero, .vr-layout { display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(290px, 0.88fr); gap: 18px; }
+    .vr-hero h1 { margin: 8px 0 12px; font-size: clamp(2rem, 4vw, 3.5rem); }
+    .vr-layout { align-items: start; }
+    .vr-container { position: relative; width: 100%; height: 76vh; min-height: 520px; border-radius: 26px; overflow: hidden; background: #05131b; border: 1px solid rgba(20, 33, 29, 0.12); box-shadow: 0 28px 54px rgba(20, 33, 29, 0.16); }
+    #ui-overlay { position: absolute; left: 18px; right: 18px; bottom: 18px; z-index: 20; background: rgba(5, 19, 27, 0.78); color: white; padding: 14px 18px; border-radius: 20px; border: 1px solid rgba(244, 185, 66, 0.22); backdrop-filter: blur(10px); line-height: 1.6; }
+    .overlay-title { display: block; font-weight: 800; margin-bottom: 4px; }
+    .hud-top { position: absolute; top: 18px; left: 18px; right: 18px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; z-index: 20; }
+    .hud-chip, .info-card, .preset-card { padding: 12px 14px; border-radius: 18px; background: rgba(255, 255, 255, 0.76); border: 1px solid rgba(20, 33, 29, 0.1); }
+    .hud-chip { background: rgba(5, 19, 27, 0.72); color: white; border-color: rgba(255, 255, 255, 0.08); }
+    .preset-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .preset-card { cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
+    .preset-card.active { transform: translateY(-2px); border-color: rgba(196, 90, 45, 0.45); }
+    .journey-list { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
+    .journey-list li { padding: 12px 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.82); border: 1px solid rgba(20, 33, 29, 0.08); }
+    .journey-list li.done { background: rgba(31, 107, 79, 0.14); border-color: rgba(31, 107, 79, 0.18); }
+    .action-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 14px; }
+    .action-btn { border: none; border-radius: 999px; padding: 12px 16px; cursor: pointer; font-weight: 700; }
+    .action-btn.primary { background: linear-gradient(135deg, var(--clay), var(--gold)); color: white; }
+    .action-btn.secondary { background: rgba(13, 59, 102, 0.08); color: var(--lagoon); }
+    .mobile-note { color: rgba(16, 24, 23, 0.74); line-height: 1.7; }
     @media (max-width: 980px) {
-        .vr-hero,
-        .vr-layout {
-            grid-template-columns: 1fr;
-        }
-
-        .vr-container {
-            height: 62vh;
-            min-height: 460px;
-        }
+        .vr-hero, .vr-layout, .preset-grid { grid-template-columns: 1fr; }
+        .vr-container { height: 62vh; min-height: 430px; }
     }
 </style>
 
@@ -160,54 +37,69 @@
 <div class="vr-shell">
     <section class="surface-card vr-hero">
         <div>
-            <p style="margin:0;color:var(--forest);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">
-                Module immersion culturelle premium
-            </p>
-            <h1>Village VR Nzassa</h1>
+            <p style="margin:0;color:var(--forest);font-weight:700;text-transform:uppercase;letter-spacing:0.06em;">Immersion culturelle WebXR</p>
+            <h1>Des lieux africains vivants, pensés pour mobile et exploration rapide.</h1>
             <p style="max-width:66ch;line-height:1.8;">
-                La VR doit impressionner autant qu'elle enseigne. Cette scene devient une visite guidee
-                avec score d'exploration, narration culturelle, vocabulaire contextuel et objets cliquables
-                qui racontent un univers africain vivant.
+                Cette version VR met l'accent sur de vrais imaginaires africains: village senoufo, grand marche urbain
+                et esplanade patrimoniale. Les decors restent legers pour mobile, mais la narration, le son et les interactions
+                donnent une visite plus credible et plus memorisable.
             </p>
+            <div class="mobile-note">
+                Sur telephone, utilise le toucher pour regarder et les boutons de scene pour changer d'ambiance sans recharger toute la page.
+            </div>
         </div>
         <div class="info-card">
             <h3 style="margin-top:0;">Mission immersive</h3>
             <p id="journey-progress" style="margin-bottom:10px;">Explorer 0/5 points culturels.</p>
-            <div class="hud-chip">Mode: visite libre + guide culturel</div>
+            <div class="hud-chip">Mode: scenes adaptatives + narration audio</div>
             <div class="hud-chip" style="margin-top:10px;">Vocabulaire appris: <span id="vocab-count">0</span></div>
+        </div>
+    </section>
+
+    <section class="surface-card vr-card">
+        <h2 style="margin-top:0;">Choisir un lieu</h2>
+        <div class="preset-grid" id="preset-grid">
+            {% for preset in scene_presets %}
+                <article class="preset-card {% if forloop.first %}active{% endif %}" data-scene="{{ preset.key }}">
+                    <strong>{{ preset.label }}</strong>
+                    <div style="margin-top:8px;color:rgba(16,24,23,0.68);">{{ preset.location }}</div>
+                    <p style="line-height:1.7;">{{ preset.story }}</p>
+                    <div style="font-size:0.92rem;color:var(--forest);">Ambiance: {{ preset.sound }}</div>
+                </article>
+            {% endfor %}
         </div>
     </section>
 
     <section class="vr-layout">
         <div class="vr-container">
             <div class="hud-top">
-                <div class="hud-chip">Deplacement: Z Q S D</div>
+                <div class="hud-chip">Deplacement: Z Q S D ou glisser</div>
                 <div class="hud-chip">Elements trouves: <span id="found-count">0</span>/5</div>
                 <div class="hud-chip">Score: <span id="vr-score">0</span> XP</div>
             </div>
 
             <div id="ui-overlay">
                 <span class="overlay-title">Guide culturel</span>
-                <span id="overlay-message">Entrez dans le village, cliquez sur les objets et ecoutez les mots en contexte.</span>
+                <span id="overlay-message">Choisis une scene puis clique sur les objets pour ecouter le lieu et memoriser le vocabulaire.</span>
             </div>
 
-            <a-scene embedded cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable">
-                <a-sky color="#f08a24"></a-sky>
-                <a-plane position="0 0 0" rotation="-90 0 0" width="120" height="120" color="#b85e2b"></a-plane>
+            <a-scene embedded cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable" renderer="antialias: false">
+                <a-sky id="vr-sky" color="{{ scene_presets.0.sky }}"></a-sky>
+                <a-plane id="vr-ground" position="0 0 0" rotation="-90 0 0" width="120" height="120" color="{{ scene_presets.0.ground }}"></a-plane>
 
-                <a-entity id="case" position="0 0 -8" class="clickable" onclick="apprendre('case', 'Sua', 'La case familiale est un lieu d'accueil, de transmission et de memoire.')">
+                <a-entity id="case" position="0 0 -8" class="clickable hotspot" onclick="apprendre('case', 'Sua', 'Case', 'La case familiale est un lieu d accueil, de transmission et de memoire.')">
                     <a-cylinder position="0 1.2 0" radius="2.3" height="2.4" color="#8c4f2b"></a-cylinder>
                     <a-cone position="0 3.5 0" radius-bottom="2.8" height="2.5" color="#5c3c2d"></a-cone>
                     <a-text value="CASE" position="0 5 0" align="center" color="#fff7ec" width="7"></a-text>
                 </a-entity>
 
-                <a-entity id="arbre" position="7 0 -10" class="clickable" onclick="apprendre('arbre', 'Waka', 'L arbre symbolise l ombre, la parole partagee et la vie du village.')">
+                <a-entity id="arbre" position="7 0 -10" class="clickable hotspot" onclick="apprendre('arbre', 'Waka', 'Arbre a palabres', 'L arbre symbolise l ombre, la parole partagee et la vie collective.')">
                     <a-cylinder position="0 1.9 0" radius="0.34" height="3.8" color="#4a301f"></a-cylinder>
-                    <a-sphere position="0 4.8 0" radius="2.25" color="#2e8b57"></a-sphere>
+                    <a-sphere id="tree-crown" position="0 4.8 0" radius="2.25" color="#2e8b57"></a-sphere>
                     <a-text value="ARBRE" position="0 7 0" align="center" color="#fff7ec" width="6"></a-text>
                 </a-entity>
 
-                <a-entity id="tabouret" position="-4 0 -4" class="clickable" onclick="apprendre('tabouret', 'Bia', 'Le tabouret porte l idee de statut, de repos et parfois d autorite.')">
+                <a-entity id="tabouret" position="-4 0 -4" class="clickable hotspot" onclick="apprendre('tabouret', 'Bia', 'Tabouret', 'Le tabouret porte l idee de statut, de repos et parfois d autorite.')">
                     <a-box position="0 0.45 0" width="1.2" height="0.16" depth="0.7" color="#e0c39c"></a-box>
                     <a-cylinder position="-0.45 0.2 0.25" radius="0.06" height="0.5" color="#7a4b28"></a-cylinder>
                     <a-cylinder position="0.45 0.2 0.25" radius="0.06" height="0.5" color="#7a4b28"></a-cylinder>
@@ -216,25 +108,23 @@
                     <a-text value="TABOURET" position="0 1.2 0" align="center" color="#1b1b1b" width="4"></a-text>
                 </a-entity>
 
-                <a-entity id="tambour" position="4 0 -4" class="clickable" onclick="apprendre('tambour', 'Kpl e', 'Le tambour relie la musique, l annonce communautaire et la ceremonie.')">
+                <a-entity id="tambour" position="4 0 -4" class="clickable hotspot" onclick="apprendre('tambour', 'Kple', 'Tambour', 'Le tambour relie la musique, l annonce communautaire et la ceremonie.')">
                     <a-cylinder position="0 0.9 0" radius="0.65" height="1.7" color="#8a4720"></a-cylinder>
                     <a-ring position="0 1.8 0" rotation="-90 0 0" radius-inner="0.2" radius-outer="0.68" color="#f2d2a2"></a-ring>
                     <a-ring position="0 0 0" rotation="-90 0 0" radius-inner="0.2" radius-outer="0.68" color="#f2d2a2"></a-ring>
                     <a-text value="TAMBOUR" position="0 2.7 0" align="center" color="#fff7ec" width="5"></a-text>
                 </a-entity>
 
-                <a-entity id="feu" position="-8 0 -9" class="clickable" onclick="apprendre('feu', 'Dja', 'Le feu rassemble, chauffe, nourrit et structure souvent les recits du soir.')">
-                    <a-circle position="0 0.02 0" rotation="-90 0 0" radius="1.5" color="#6b2a1e"></a-circle>
-                    <a-cone position="0 0.55 0" radius-bottom="0.45" height="1.2" color="#ff7b1c"></a-cone>
-                    <a-cone position="0.4 0.45 0.15" radius-bottom="0.3" height="0.9" color="#ffb347"></a-cone>
-                    <a-cone position="-0.32 0.42 -0.1" radius-bottom="0.28" height="0.8" color="#ffd166"></a-cone>
-                    <a-text value="FEU" position="0 2 0" align="center" color="#fff7ec" width="4"></a-text>
+                <a-entity id="marche" position="-8 0 -9" class="clickable hotspot" onclick="apprendre('marche', 'Sugu', 'Marche', 'Le marche reunit les salutations, les prix, les senteurs et l energie du quotidien.')">
+                    <a-box id="market-body" position="0 0.95 0" width="2.6" height="1.2" depth="2" color="#b5651d"></a-box>
+                    <a-cone position="0 2 0" radius-bottom="2.2" height="1.3" color="#e76f51"></a-cone>
+                    <a-text value="MARCHE" position="0 3.6 0" align="center" color="#fff7ec" width="4"></a-text>
                 </a-entity>
 
                 <a-entity position="0 0 -20">
-                    <a-box position="-14 1.4 0" width="8" height="2.8" depth="1" color="#a56a3f"></a-box>
-                    <a-box position="0 1.2 0" width="10" height="2.4" depth="1" color="#965a34"></a-box>
-                    <a-box position="14 1.5 0" width="7" height="3" depth="1" color="#ae7548"></a-box>
+                    <a-box id="wall-left" position="-14 1.4 0" width="8" height="2.8" depth="1" color="#a56a3f"></a-box>
+                    <a-box id="wall-center" position="0 1.2 0" width="10" height="2.4" depth="1" color="#965a34"></a-box>
+                    <a-box id="wall-right" position="14 1.5 0" width="7" height="3" depth="1" color="#ae7548"></a-box>
                 </a-entity>
 
                 <a-light type="ambient" color="#ffd9a3" intensity="0.85"></a-light>
@@ -249,28 +139,23 @@
         <div class="sidebar-stack">
             <div class="vr-card surface-card">
                 <h3 style="margin-top:0;">Carnet d'exploration</h3>
-                <p id="vocab-log" style="line-height:1.8;margin-bottom:0;">
-                    Les mots appris apparaitront ici au fil de la visite.
-                </p>
+                <p id="vocab-log" style="line-height:1.8;margin-bottom:0;">Les mots appris apparaitront ici au fil de la visite.</p>
             </div>
 
             <div class="vr-card surface-card">
                 <h3 style="margin-top:0;">Parcours recommande</h3>
                 <ul id="journey-list" class="journey-list">
                     <li data-key="case">Trouver la case</li>
-                    <li data-key="arbre">Trouver l arbre</li>
+                    <li data-key="arbre">Trouver l arbre a palabres</li>
                     <li data-key="tabouret">Trouver le tabouret</li>
                     <li data-key="tambour">Trouver le tambour</li>
-                    <li data-key="feu">Trouver le feu</li>
+                    <li data-key="marche">Trouver l etal du marche</li>
                 </ul>
             </div>
 
             <div class="vr-card surface-card">
                 <h3 style="margin-top:0;">Commandes</h3>
-                <p style="line-height:1.7;">
-                    Marchez avec Z Q S D, regardez autour de vous avec la souris et cliquez sur les objets
-                    pour declencher la narration, le vocabulaire et le score.
-                </p>
+                <p style="line-height:1.7;">Clique sur les objets pour declencher la narration, le vocabulaire et le score. Sur mobile, commence par choisir une scene puis fais des touches courtes pour garder une bonne fluidite.</p>
                 <div class="action-row">
                     <button class="action-btn primary" onclick="resetJourney()">Recommencer la visite</button>
                     <button class="action-btn secondary" onclick="speakGuide()">Ecouter le guide</button>
@@ -280,10 +165,13 @@
     </section>
 </div>
 
+{{ scene_presets|json_script:"vr-scenes" }}
+
 <script>
     const journeyState = new Set();
     const learnedWords = [];
     const totalStops = 5;
+    const scenes = JSON.parse(document.getElementById("vr-scenes").textContent);
 
     const overlayMessage = document.getElementById("overlay-message");
     const foundCount = document.getElementById("found-count");
@@ -292,11 +180,23 @@
     const vocabCount = document.getElementById("vocab-count");
     const vocabLog = document.getElementById("vocab-log");
     const journeyList = document.getElementById("journey-list");
+    const presetGrid = document.getElementById("preset-grid");
+    const sky = document.getElementById("vr-sky");
+    const ground = document.getElementById("vr-ground");
+    const marketBody = document.getElementById("market-body");
+    const treeCrown = document.getElementById("tree-crown");
+    const wallLeft = document.getElementById("wall-left");
+    const wallCenter = document.getElementById("wall-center");
+    const wallRight = document.getElementById("wall-right");
 
     function speak(text) {
+        if (!window.speechSynthesis) {
+            return;
+        }
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.lang = "fr-FR";
         utterance.rate = 0.92;
+        window.speechSynthesis.cancel();
         window.speechSynthesis.speak(utterance);
     }
 
@@ -322,7 +222,6 @@
 
     function apprendre(key, nomLocal, nomFrancais, histoire) {
         speak(`${nomLocal}. ${histoire}`);
-
         overlayMessage.innerHTML = `<strong>${nomFrancais}</strong> se dit <strong>${nomLocal}</strong>. ${histoire}`;
 
         if (!journeyState.has(key)) {
@@ -333,22 +232,43 @@
         }
 
         if (journeyState.size === totalStops) {
-            overlayMessage.innerHTML = "Bravo. Vous avez complete la visite immersive et decouvert tout le vocabulaire du village.";
+            overlayMessage.innerHTML = "Bravo. Vous avez complete la visite immersive et decouvert tout le vocabulaire du lieu.";
         }
+    }
+
+    function applyScene(sceneKey) {
+        const scene = scenes.find((item) => item.key === sceneKey) || scenes[0];
+        presetGrid.querySelectorAll(".preset-card").forEach((card) => {
+            card.classList.toggle("active", card.dataset.scene === scene.key);
+        });
+
+        sky.setAttribute("color", scene.sky);
+        ground.setAttribute("color", scene.ground);
+        marketBody.setAttribute("color", scene.accent);
+        treeCrown.setAttribute("color", scene.accent);
+        wallLeft.setAttribute("color", scene.ground);
+        wallCenter.setAttribute("color", scene.accent);
+        wallRight.setAttribute("color", scene.ground);
+        overlayMessage.textContent = `${scene.label} - ${scene.location}. ${scene.story} Ambiance sonore: ${scene.sound}`;
     }
 
     function resetJourney() {
         journeyState.clear();
         learnedWords.length = 0;
-        overlayMessage.textContent = "Entrez dans le village, cliquez sur les objets et ecoutez les mots en contexte.";
+        overlayMessage.textContent = "Choisis une scene puis clique sur les objets pour ecouter le lieu et memoriser le vocabulaire.";
         updateJourneyUI();
         updateVocabLog();
     }
 
     function speakGuide() {
-        speak("Bienvenue dans le village Nzassa. Explorez la case, l arbre, le tabouret, le tambour et le feu pour apprendre le vocabulaire culturel.");
+        speak("Bienvenue dans l immersion Nzassa. Choisissez un lieu, explorez les objets, puis repetez le vocabulaire entendu pour fixer la memoire culturelle.");
     }
 
+    presetGrid.querySelectorAll(".preset-card").forEach((card) => {
+        card.addEventListener("click", () => applyScene(card.dataset.scene));
+    });
+
+    applyScene(scenes[0].key);
     updateJourneyUI();
 </script>
 {% endblock %}

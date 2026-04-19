@@ -1,277 +1,764 @@
 {% extends "nzassa_app/base.html" %}
 
-{% block title %}Nzassa School | Langues africaines, IA et culture vivante{% endblock %}
+{% block title %}Nzassa School | Apprendre les langues et cultures africaines{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    primary: "#E67E22",
+                    secondary: "#F39C12",
+                    forest: "#155e4b",
+                    lagoon: "#08304d",
+                    sand: "#f7efe2",
+                    cocoa: "#6a3b28"
+                },
+                fontFamily: {
+                    brand: ["Pacifico", "cursive"],
+                    body: ["Montserrat", "sans-serif"]
+                },
+                borderRadius: {
+                    button: "10px"
+                },
+                boxShadow: {
+                    soft: "0 18px 45px rgba(15, 23, 42, 0.08)"
+                }
+            }
+        }
+    };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+<style>
+    body {
+        font-family: "Montserrat", sans-serif;
+    }
+
+    .hero-section {
+        background-image:
+            linear-gradient(to right, rgba(255, 255, 255, 0.95) 32%, rgba(255, 255, 255, 0.72) 56%, rgba(255, 255, 255, 0.18) 100%),
+            url("https://images.pexels.com/photos/29663383/pexels-photo-29663383.jpeg?auto=compress&cs=tinysrgb&w=1600");
+        background-size: cover;
+        background-position: center;
+    }
+
+    .pattern-band {
+        background-image: linear-gradient(
+            90deg,
+            #e67e22 0%,
+            #e67e22 14%,
+            #f39c12 14%,
+            #f39c12 28%,
+            #155e4b 28%,
+            #155e4b 42%,
+            #08304d 42%,
+            #08304d 56%,
+            #f7efe2 56%,
+            #f7efe2 70%,
+            #e67e22 70%,
+            #e67e22 84%,
+            #f39c12 84%,
+            #f39c12 100%
+        );
+    }
+
+    .module-card,
+    .language-card,
+    .feature-card,
+    .game-card,
+    .highlight-card {
+        transition: transform 0.28s ease, box-shadow 0.28s ease;
+    }
+
+    .module-card:hover,
+    .language-card:hover,
+    .feature-card:hover,
+    .game-card:hover,
+    .highlight-card:hover {
+        transform: translateY(-6px);
+        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.1);
+    }
+
+    .ai-bubble-user {
+        background: linear-gradient(135deg, rgba(230, 126, 34, 0.14), rgba(243, 156, 18, 0.18));
+    }
+
+    .ai-bubble-bot {
+        background: linear-gradient(135deg, rgba(8, 48, 77, 0.12), rgba(21, 94, 75, 0.18));
+    }
+
+    .motif-card {
+        background:
+            radial-gradient(circle at top left, rgba(243, 156, 18, 0.16), transparent 28%),
+            linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 239, 226, 0.86));
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<style>
-    .landing-stack { display: grid; gap: 30px; }
-    .hero { position: relative; overflow: hidden; padding: 36px; display: grid; grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr); gap: 24px; min-height: 680px; background: linear-gradient(135deg, rgba(255, 247, 235, 0.9), rgba(255, 252, 247, 0.62)), radial-gradient(circle at top left, rgba(241, 178, 74, 0.16), transparent 28%); }
-    .hero::after, .hero::before { content: ""; position: absolute; border-radius: 50%; pointer-events: none; }
-    .hero::after { right: -120px; top: -120px; width: 360px; height: 360px; background: radial-gradient(circle, rgba(241, 178, 74, 0.3), transparent 70%); }
-    .hero::before { left: -40px; bottom: -40px; width: 220px; height: 220px; background: radial-gradient(circle, rgba(21, 94, 75, 0.16), transparent 72%); }
-    .eyebrow { display: inline-flex; align-items: center; gap: 10px; padding: 8px 14px; border-radius: 999px; background: rgba(21, 94, 75, 0.1); color: var(--forest); font-size: 0.86rem; letter-spacing: 0.04em; text-transform: uppercase; font-weight: 700; }
-    .hero-copy { display: flex; flex-direction: column; justify-content: space-between; gap: 24px; }
-    .hero h1 { margin: 18px 0 14px; font-family: "Space Grotesk", sans-serif; font-size: clamp(2.9rem, 4.6vw, 5.4rem); line-height: 0.92; letter-spacing: -0.04em; max-width: 10ch; }
-    .hero p { max-width: 60ch; font-size: 1.06rem; line-height: 1.8; color: rgba(16, 24, 23, 0.82); }
-    .hero-actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 24px; }
-    .button-link { text-decoration: none; border-radius: 999px; padding: 14px 18px; font-weight: 700; transition: transform 0.2s ease, box-shadow 0.2s ease; }
-    .button-link:hover { transform: translateY(-2px); }
-    .button-link.primary { color: white; background: linear-gradient(135deg, var(--clay), var(--gold)); box-shadow: 0 18px 30px rgba(196, 90, 45, 0.26); }
-    .button-link.secondary { background: rgba(8, 48, 77, 0.08); color: var(--lagoon); }
-    .hero-visuals { position: relative; display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(170px, 0.8fr); grid-template-rows: 1fr auto; gap: 16px; }
-    .visual-card { position: relative; overflow: hidden; min-height: 240px; border-radius: 28px; box-shadow: 0 24px 56px rgba(8, 48, 77, 0.2); background-size: cover; background-position: center; }
-    .visual-card.large { grid-row: 1 / span 2; min-height: 100%; background-image: linear-gradient(180deg, rgba(8, 48, 77, 0.08), rgba(8, 48, 77, 0.65)), url("https://images.pexels.com/photos/29663383/pexels-photo-29663383.jpeg?cs=srgb&dl=pexels-akoonie-29663383.jpg&fm=jpg"); }
-    .visual-card.small-mask { background-image: linear-gradient(180deg, rgba(16, 24, 23, 0.1), rgba(16, 24, 23, 0.55)), url("https://images.pexels.com/photos/9540962/pexels-photo-9540962.jpeg?cs=srgb&dl=pexels-cottonbro-9540962.jpg&fm=jpg"); }
-    .visual-card.small-data { min-height: 170px; padding: 18px; background: linear-gradient(160deg, rgba(8, 48, 77, 0.96), rgba(21, 94, 75, 0.94)); color: white; display: grid; align-content: start; gap: 10px; }
-    .visual-card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 15%, rgba(16, 24, 23, 0.58) 100%); }
-    .visual-copy, .hero-float { position: absolute; z-index: 1; }
-    .visual-copy { left: 22px; right: 22px; bottom: 22px; color: white; }
-    .hero-float { left: 22px; top: 22px; display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.18); backdrop-filter: blur(8px); color: white; font-size: 0.86rem; font-weight: 700; }
-    .hero-microgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-    .hero-mini { padding: 14px; border-radius: 20px; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.08); }
-    .hero-mini strong { display: block; font-size: 1.35rem; margin-bottom: 4px; }
-    .hero-bottom-grid, .grid-2, .grid-3, .grid-4, .roadmap-grid, .data-grid, .image-ribbon, .word-grid { display: grid; gap: 16px; }
-    .hero-bottom-grid, .grid-2, .data-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .grid-3, .image-ribbon { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .grid-4, .roadmap-grid, .word-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-    .hero-note, .hero-proof, .info-card, .roadmap-card, .data-card, .word-card, .search-box { padding: 20px; border-radius: 22px; background: rgba(255, 255, 255, 0.62); border: 1px solid var(--line); }
-    .hero-proof-list, .pillars-list, .check-list { list-style: none; padding: 0; margin: 14px 0 0; display: grid; gap: 10px; }
-    .hero-proof-list li { display: flex; justify-content: space-between; gap: 12px; font-size: 0.95rem; color: rgba(16, 24, 23, 0.84); }
-    .hero-proof-list span:last-child { font-weight: 800; color: var(--forest); }
-    .section-card { padding: 34px; }
-    .section-head { display: flex; justify-content: space-between; align-items: end; gap: 18px; margin-bottom: 24px; }
-    .section-head h2 { margin: 0; font-size: clamp(1.6rem, 3vw, 2.5rem); }
-    .section-head p { margin: 0; color: rgba(16, 24, 23, 0.74); max-width: 58ch; line-height: 1.7; }
-    .pillars-list li, .check-list li { padding-left: 18px; position: relative; line-height: 1.55; color: rgba(16, 24, 23, 0.82); }
-    .pillars-list li::before, .check-list li::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: linear-gradient(135deg, var(--clay), var(--gold)); position: absolute; left: 0; top: 0.65em; transform: translateY(-50%); }
-    .timeline-step { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 12px; background: linear-gradient(135deg, var(--forest), #2f936b); color: white; font-weight: 800; margin-bottom: 14px; }
-    .highlight-band { padding: 26px; display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(260px, 0.85fr); gap: 20px; background: linear-gradient(135deg, rgba(21, 94, 75, 0.94), rgba(8, 48, 77, 0.92)); color: white; }
-    .highlight-band p { margin: 10px 0 0; line-height: 1.7; color: rgba(255, 255, 255, 0.86); }
-    .stage-badges { display: flex; gap: 10px; flex-wrap: wrap; align-content: start; }
-    .stage-badges span { padding: 10px 12px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.16); font-weight: 700; font-size: 0.92rem; }
-    .image-tile { min-height: 280px; border-radius: 26px; overflow: hidden; position: relative; background-size: cover; background-position: center; box-shadow: 0 20px 50px rgba(16, 24, 23, 0.14); }
-    .image-tile::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(16, 24, 23, 0.05), rgba(16, 24, 23, 0.58)); }
-    .image-tile .caption { position: absolute; left: 18px; right: 18px; bottom: 18px; z-index: 1; color: white; }
-    .word-card strong { display: block; font-size: 1.2rem; margin-bottom: 6px; text-transform: capitalize; }
-    .word-card span { display: block; color: rgba(16, 24, 23, 0.66); font-size: 0.9rem; line-height: 1.5; }
-    #search-input { width: 100%; padding: 16px 18px; border-radius: 18px; border: 1px solid rgba(16, 24, 23, 0.12); outline: none; font-size: 1rem; background: rgba(255, 255, 255, 0.94); }
-    #search-input:focus { border-color: rgba(21, 94, 75, 0.42); box-shadow: 0 0 0 4px rgba(21, 94, 75, 0.12); }
-    .result-card { background: rgba(255, 255, 255, 0.8); padding: 18px; margin: 12px 0; border-radius: 20px; border: 1px solid var(--line); display: flex; justify-content: space-between; gap: 16px; align-items: center; box-shadow: 0 14px 28px rgba(16, 24, 23, 0.06); }
-    .btn-audio { border: none; border-radius: 50%; width: 48px; height: 48px; font-size: 0.9rem; font-weight: 700; cursor: pointer; background: linear-gradient(135deg, var(--clay), var(--gold)); color: white; box-shadow: 0 14px 24px rgba(196, 90, 45, 0.24); }
-    .no-result { color: rgba(16, 24, 23, 0.6); font-style: italic; }
-    @media (max-width: 1040px) { .hero, .hero-visuals, .hero-bottom-grid, .grid-2, .grid-3, .grid-4, .roadmap-grid, .data-grid, .image-ribbon, .word-grid, .highlight-band { grid-template-columns: 1fr; } .section-head { align-items: start; flex-direction: column; } }
-    @media (max-width: 640px) { .hero, .section-card, .highlight-band { padding: 24px; } .hero h1 { max-width: none; font-size: 2.6rem; } .hero-microgrid { grid-template-columns: 1fr; } .result-card { align-items: start; flex-direction: column; } }
-</style>
-
-<div class="landing-stack">
-    <section class="hero surface-card" id="vision">
-        <div class="hero-copy">
-            <div>
-                <span class="eyebrow">Plateforme culturelle + apprentissage intelligent</span>
-                <h1>Apprendre une langue africaine avec de la memoire, du rythme et une vraie identite visuelle.</h1>
-                <p>Nzassa School devient une plateforme plus ambitieuse: cours en langues, pratique culturelle, signes, immersion et un coach IA qui capitalise automatiquement les mots decouverts dans les lecons, les traductions et les parcours pour t'aider a progresser plus vite.</p>
-                <div class="hero-actions">
-                    <a class="button-link primary" href="{% url 'ai_coach' %}">Essayer le Coach IA</a>
-                    <a class="button-link secondary" href="{% url 'course_catalog' %}">Explorer les parcours</a>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nzassa School - Préserver et valoriser les langues et cultures de Côte d'Ivoire</title>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
+    <script>tailwind.config={theme:{extend:{colors:{primary:'#E67E22',secondary:'#F39C12'},borderRadius:{'none':'0px','sm':'4px',DEFAULT:'8px','md':'12px','lg':'16px','xl':'20px','2xl':'24px','3xl':'32px','full':'9999px','button':'8px'}}}}</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css">
+    <style>
+        :where([class^="ri-"])::before { content: "\f3c2"; }
+        body {
+            font-family: 'Montserrat', sans-serif;
+        }
+        .hero-section {
+            background-image: linear-gradient(to right, rgba(255, 255, 255, 0.9) 40%, rgba(255, 255, 255, 0.4) 70%, rgba(255, 255, 255, 0) 100%), url('https://readdy.ai/api/search-image?query=A%20vibrant%20and%20colorful%20scene%20showcasing%20the%20rich%20cultural%20diversity%20of%20Ivory%20Coast.%20The%20image%20features%20traditional%20African%20patterns%2C%20children%20learning%20together%2C%20and%20cultural%20symbols.%20The%20left%20side%20has%20a%20clean%20white%20gradient%20background%20that%20smoothly%20transitions%20to%20reveal%20colorful%20cultural%20elements%20on%20the%20right%20side.%20The%20overall%20style%20is%20modern%2C%20bright%2C%20and%20educational%20with%20soft%20lighting.&width=1200&height=600&seq=nzassa1&orientation=landscape');
+            background-size: cover;
+            background-position: center;
+        }
+        .language-card {
+            transition: transform 0.3s ease;
+        }
+        .language-card:hover {
+            transform: translateY(-5px);
+        }
+        .module-card {
+            transition: all 0.3s ease;
+        }
+        .module-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        .custom-switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        .custom-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: #E67E22;
+        }
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+    </style>
+<div class="text-slate-800">
+    <section class="hero-section overflow-hidden rounded-[28px] shadow-soft">
+        <div class="pattern-band h-2 w-full"></div>
+        <div class="container mx-auto px-4 py-14 md:py-20">
+            <div class="max-w-3xl">
+                <div class="mb-5 inline-flex items-center gap-2 rounded-full bg-white/80 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-forest">
+                    <span class="h-2.5 w-2.5 rounded-full bg-secondary"></span>
+                    Education, langues, culture et IA
+                </div>
+                <h1 class="mb-6 text-4xl font-extrabold leading-tight text-slate-900 md:text-5xl">
+                    Préservons ensemble notre patrimoine linguistique et culturel
+                </h1>
+                <p class="mb-8 max-w-2xl text-lg leading-8 text-slate-700">
+                    Nzassa School est une plateforme éducative moderne pour apprendre les langues africaines, découvrir les traditions,
+                    parler avec une IA intelligente et progresser grâce à des jeux interactifs.
+                </p>
+                <div class="flex flex-col gap-4 sm:flex-row">
+                    <a href="{% url 'register' %}" class="whitespace-nowrap rounded-button bg-primary px-6 py-3 text-center text-base font-bold text-white transition hover:opacity-90">
+                        Commencer gratuitement
+                    </a>
+                    <a href="#modules" class="whitespace-nowrap rounded-button border border-slate-300 bg-white px-6 py-3 text-center text-base font-semibold text-slate-700 transition hover:bg-slate-50">
+                        Découvrir les modules
+                    </a>
+                </div>
+                <div class="mt-8 flex flex-wrap items-center gap-5">
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-orange-100 text-primary">
+                            <i class="ri-translate-2-line text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold">{{ stats.languages }}+ langues</div>
+                            <div class="text-xs text-slate-500">culture et expression</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-blue-100 text-lagoon">
+                            <i class="ri-book-open-line text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold">{{ stats.lessons }}+ leçons</div>
+                            <div class="text-xs text-slate-500">parcours progressifs</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-11 w-11 items-center justify-center rounded-full bg-green-100 text-forest">
+                            <i class="ri-robot-2-line text-xl"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold">IA interactive</div>
+                            <div class="text-xs text-slate-500">texte, voix et apprentissage</div>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div class="hero-bottom-grid">
-                <div class="hero-note">
-                    <h3>Ce que l'IA fait maintenant</h3>
-                    <p>Elle parcourt le dictionnaire, les titres de lecons, les phrases cles et les contenus de cours pour construire un noyau de vocabulaire vivant. Chaque nouveau contenu enrichit sa memoire locale.</p>
-                </div>
-                <div class="hero-proof">
-                    <h3>Preuves visibles</h3>
-                    <ul class="hero-proof-list">
-                        <li><span>Coach IA local</span><span>Actif</span></li>
-                        <li><span>Langue des signes</span><span>Actif</span></li>
-                        <li><span>Immersion culturelle</span><span>Actif</span></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        <aside class="hero-visuals">
-            <article class="visual-card large">
-                <div class="hero-float">Design vivant + culture</div>
-                <div class="visual-copy">
-                    <strong style="display:block;font-size:1.45rem;margin-bottom:8px;">Une ambiance plus premium</strong>
-                    <span style="line-height:1.6;">On quitte le rendu statique pour une direction plus editoriale, plus dynamique et plus memorisable.</span>
-                </div>
-            </article>
-            <article class="visual-card small-mask">
-                <div class="visual-copy">
-                    <strong style="display:block;font-size:1.05rem;margin-bottom:6px;">Patrimoine conserve</strong>
-                    <span style="line-height:1.55;">Les images et les codes culturels restent au centre.</span>
-                </div>
-            </article>
-            <article class="visual-card small-data">
-                <strong style="font-size:1.05rem;">Cap produit a assumer</strong>
-                <div class="hero-microgrid">
-                    <div class="hero-mini"><strong>{{ stats.languages }}</strong><span>langues</span></div>
-                    <div class="hero-mini"><strong>{{ stats.courses }}</strong><span>parcours</span></div>
-                    <div class="hero-mini"><strong>{{ stats.lessons }}</strong><span>lecons</span></div>
-                </div>
-            </article>
-        </aside>
-    </section>
-
-    <section class="section-card surface-card">
-        <div class="section-head">
-            <div><h2>Direction visuelle</h2></div>
-            <p>Tu voulais quelque chose de plus attrayant, plus dynamique et moins fade. Cette nouvelle composition assume des images fortes, des cartes plus riches et une atmosphere plus contemporaine.</p>
-        </div>
-        <div class="image-ribbon">
-            <article class="image-tile" style="background-image:linear-gradient(180deg, rgba(16,24,23,0.08), rgba(16,24,23,0.6)), url('https://images.pexels.com/photos/29663383/pexels-photo-29663383.jpeg?cs=srgb&dl=pexels-akoonie-29663383.jpg&fm=jpg');"><div class="caption"><strong>Portraits forts</strong><p style="margin:8px 0 0;line-height:1.55;">Des visuels humains, vibrants et identifiables.</p></div></article>
-            <article class="image-tile" style="background-image:linear-gradient(180deg, rgba(16,24,23,0.06), rgba(16,24,23,0.58)), url('https://images.pexels.com/photos/9540962/pexels-photo-9540962.jpeg?cs=srgb&dl=pexels-cottonbro-9540962.jpg&fm=jpg');"><div class="caption"><strong>Masques et patrimoine</strong><p style="margin:8px 0 0;line-height:1.55;">Le design garde la dimension culturelle que tu voulais conserver.</p></div></article>
-            <article class="image-tile" style="background:linear-gradient(135deg, rgba(8,48,77,0.98), rgba(21,94,75,0.94));"><div class="caption" style="top:18px;bottom:auto;"><strong>IA, cours et retention</strong><p style="margin:8px 0 0;line-height:1.65;">Le design ne sert pas juste a faire joli: il aide a vendre les parcours, l'IA et l'immersion.</p></div></article>
         </div>
     </section>
 
-    <section class="section-card surface-card" id="produit">
-        <div class="section-head"><div><h2>Ce que le produit doit contenir</h2></div><p>On garde ta vision, mais on la structure comme un vrai produit edtech: simple pour l'utilisateur, credible pour Django, et plus fort visuellement.</p></div>
-        <div class="grid-4">
-            <article class="info-card"><h3>1. Acquisition et compte</h3><ul class="pillars-list"><li>Inscription, connexion et recuperation de mot de passe</li><li>Choix initial de langue, niveau et objectif</li><li>Onboarding court inspire des apps mobiles</li></ul></article>
-            <article class="info-card"><h3>2. Apprentissage structure</h3><ul class="pillars-list"><li>Formations, modules, lecons et evaluation continue</li><li>Audio natif, vocabulaire, phrases et exercices</li><li>Progression visible dans un dashboard personnel</li></ul></article>
-            <article class="info-card"><h3>3. Motivation et retention</h3><ul class="pillars-list"><li>Quiz, points, badges, classement et streak quotidien</li><li>Defis courts pour garder une habitude quotidienne</li><li>Recompenses debloquant culture, IA et VR</li></ul></article>
-            <article class="info-card"><h3>4. Differenciation forte</h3><ul class="pillars-list"><li>Coach IA pour converser, guider et corriger</li><li>Langue des signes avec reconnaissance gestuelle</li><li>Immersion culturelle 3D et experiences VR</li></ul></article>
+    <section id="modules" class="mt-10 rounded-[28px] bg-slate-50 p-6 md:p-8">
+        <div class="mb-10 text-center">
+            <h2 class="text-3xl font-extrabold text-slate-900">Nos modules d'apprentissage</h2>
+            <p class="mx-auto mt-3 max-w-3xl text-slate-600">
+                Une page d'accueil simple, claire et forte, qui met tout de suite en avant les vraies fonctionnalités utiles de Nzassa School.
+            </p>
         </div>
-    </section>
 
-    <section class="surface-card section-card">
-        <div class="section-head"><div><h2>L'IA apprend deja les mots</h2></div><p>La memoire locale du coach est nourrie automatiquement par les traductions et les contenus des cours. Ces mots servent ensuite a proposer des revisions, des lecons et des rappels utiles.</p></div>
-        <div class="word-grid">
-            {% for item in discovered_vocabulary %}
-                <article class="word-card">
-                    <strong>{{ item.word }}</strong>
-                    <span>{{ item.language }}</span>
-                    <span>Source: {{ item.source }}</span>
-                    <span>Indice: {{ item.hint|truncatechars:34 }}</span>
-                </article>
-            {% endfor %}
-        </div>
-    </section>
-
-    <section class="highlight-band surface-card">
-        <div><h2 style="margin:0;">Positionnement produit</h2><p>Nzassa = plateforme d'apprentissage des langues africaines avec patrimoine vivant. La vraie force n'est pas seulement la traduction, mais la combinaison entre lecon, interaction, correction intelligente, signes, audio, culture et immersion.</p></div>
-        <div class="stage-badges"><span>Eleves</span><span>Etudiants</span><span>Diaspora</span><span>Touristes</span><span>Ecoles</span><span>Institutions culturelles</span></div>
-    </section>
-
-    <section class="section-card surface-card" id="roadmap">
-        <div class="section-head"><div><h2>Roadmap dans le bon ordre</h2></div><p>Ne pas tout faire d'un coup. Sur Django, la bonne strategie consiste a poser un socle stable puis a ajouter les couches qui rendent le projet irresistible.</p></div>
-        <div class="roadmap-grid">
-            <article class="roadmap-card"><div class="timeline-step">01</div><h3>Socle MVP</h3><p>Authentification, profils, choix de langue, catalogue de formations, modules, lecons et quiz.</p></article>
-            <article class="roadmap-card"><div class="timeline-step">02</div><h3>Dashboard vivant</h3><p>Progression, score, streak, badges, recommandations et reprise rapide de l'apprentissage.</p></article>
-            <article class="roadmap-card"><div class="timeline-step">03</div><h3>Design premium</h3><p>Interface qui impressionne en quelques secondes: accueil fort, navigation claire et mobile first.</p></article>
-            <article class="roadmap-card"><div class="timeline-step">04</div><h3>Innovation</h3><p>IA conversationnelle, correction automatique, VR culturelle, paiement premium et communaute.</p></article>
-        </div>
-    </section>
-
-    <section class="section-card surface-card">
-        <div class="section-head"><div><h2>Coach IA langues et cours</h2></div><p>La nouvelle brique IA relie le dictionnaire, les lecons et les parcours pour faire de la plateforme autre chose qu'un simple catalogue statique.</p></div>
-        <div class="grid-2">
-            <article class="info-card"><h3>Ce qu'il sait faire</h3><ul class="check-list"><li>Retrouver des mots et traductions deja presents</li><li>Suggérer un parcours ou une lecon adaptee</li><li>Reutiliser les mots decouverts automatiquement</li><li>Servir d'entree vers une future IA plus conversationnelle</li></ul></article>
-            <article class="info-card"><h3>Ce que cela prepare</h3><ul class="check-list"><li>Revisions intelligentes par theme</li><li>Mini-lecons generees a partir du vocabulaire local</li><li>Suggestions basees sur la progression de l'utilisateur</li><li>Passage futur a une IA externe sans refaire tout le produit</li></ul><p style="margin-top:16px;"><a class="button-link secondary" href="{% url 'ai_coach' %}">Ouvrir le coach</a></p></article>
-        </div>
-    </section>
-
-    <section class="section-card surface-card">
-        <div class="section-head"><div><h2>Architecture metier a prevoir</h2></div><p>Ta base de donnees doit raconter le produit. Le backend Django doit deja anticiper le premium, la gamification, les langues des signes et les contenus culturels.</p></div>
-        <div class="data-grid">
-            <article class="data-card"><h3>Base apprentissage</h3><ul class="check-list"><li>Utilisateur et profil apprenant</li><li>Langue, parcours, formation, module, lecon</li><li>Quiz, question, reponse, resultat</li><li>Progression, score, badges et streak</li></ul></article>
-            <article class="data-card"><h3>Extensions avancees</h3><ul class="check-list"><li>Session chatbot IA et historique des pratiques</li><li>Contenus signes, gestes detectes et videos</li><li>Scenes VR, objets culturels et narrations</li><li>Abonnement, paiement, offres gratuites et premium</li></ul></article>
-        </div>
-    </section>
-
-    <section class="section-card surface-card">
-        <div class="section-head"><div><h2>Monetisation et argument investisseur</h2></div><p>Le modele economique doit etre simple a comprendre: gratuit pour attirer, premium pour approfondir, avec une vraie superiorite produit grace a l'IA, l'audio, la VR et la langue des signes.</p></div>
-        <div class="grid-3">
-            <article class="info-card"><h3>Offre gratuite</h3><p>Acces limite aux lecons de base, au dictionnaire, a quelques quiz et a une partie de la decouverte culturelle.</p></article>
-            <article class="info-card"><h3>Offre premium</h3><p>Acces complet, IA avancee, parcours personnalises, scenes VR, analytics et contenus exclusifs.</p></article>
-            <article class="info-card"><h3>Preuve de traction</h3><p>Pour convaincre, il faut montrer activation, retention, temps passe, progression et interet pour le premium.</p></article>
-        </div>
-    </section>
-
-    <section class="section-card surface-card">
-        <div class="section-head"><div><h2>Parcours deja prets a montrer</h2></div><p>Ces parcours affichent la direction produit immediate. Ils peuvent etre enrichis depuis l'admin Django sans changer l'architecture generale.</p></div>
-        <div class="grid-3">
+        <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
             {% for course in featured_courses %}
-                <article class="info-card">
-                    <h3>{{ course.title }}</h3>
-                    <p>{{ course.short_description }}</p>
-                    <ul class="check-list">
-                        <li>{{ course.language.name }} - {{ course.level }}</li>
-                        <li>{{ course.lesson_count }} lecons - {{ course.estimated_minutes }} min</li>
-                        <li>{% if course.is_premium %}Premium{% else %}Accessible gratuitement{% endif %}</li>
-                    </ul>
-                    <p style="margin-top:16px;"><a class="button-link secondary" href="{% url 'course_detail' course.slug %}">Ouvrir le parcours</a></p>
+                <article class="module-card overflow-hidden rounded-2xl bg-white shadow-soft">
+                    <div class="bg-gradient-to-r from-primary to-secondary p-5 text-white">
+                        
+                        <div class="mb-3 inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold uppercase tracking-[0.18em]">
+                            {{ course.language.name }}
+                            
+                        </div>
+                        <h3 class="text-2xl font-bold">{{ course.title }}</h3>
+                        <p class="mt-2 text-sm leading-6 text-white/85">{{ course.short_description }}</p>
+                    </div>
+                    <div class="p-5">
+                        <div class="mb-4 flex items-center gap-4 text-sm text-slate-500">
+                            <span>{{ course.lesson_count }} leçons</span>
+                            <span>{{ course.estimated_minutes }} min</span>
+                            <span>{% if course.is_premium %}Premium{% else %}Gratuit{% endif %}</span>
+                            
+                        </div>
+                        <p class="mb-5 text-sm leading-7 text-slate-600">{{ course.description|truncatechars:150 }}</p>
+                        <a href="{% url 'course_detail' course.slug %}" class="inline-flex items-center gap-2 font-semibold text-primary">
+                            Ouvrir le parcours
+                            <i class="ri-arrow-right-line"></i>
+                        </a>
+                    </div>
                 </article>
             {% empty %}
-                <article class="info-card"><h3>Parcours en preparation</h3><p>Ajoute du contenu depuis l'admin Django pour remplir automatiquement cette section.</p></article>
+                <article class="module-card rounded-2xl bg-white p-6 shadow-soft md:col-span-2 xl:col-span-3">
+                    <h3 class="text-xl font-bold text-slate-900">Parcours en préparation</h3>
+                    <p class="mt-3 text-slate-600">Les contenus publiés depuis Django apparaîtront automatiquement ici.</p>
+                </article>
+            {% endfor %}
+
+            <article class="module-card rounded-2xl bg-gradient-to-br from-primary to-secondary p-6 text-white shadow-soft">
+                <h3 class="text-2xl font-bold">Coach IA Nzassa</h3>
+                <p class="mt-3 text-sm leading-7 text-white/90">
+                    Une conversation naturelle pour apprendre les salutations, les mots culturels et les expressions du quotidien.
+                </p>
+                <a href="#ai-lab" class="mt-6 inline-flex rounded-button bg-white px-5 py-3 font-bold text-primary">
+                    Tester l'IA
+                </a>
+            </article>
+        </div>
+    </section>
+
+    <section id="features" class="mt-10">
+        <div class="mb-8 text-center">
+            <h2 class="text-3xl font-extrabold text-slate-900">Pourquoi choisir Nzassa School ?</h2>
+            <p class="mx-auto mt-3 max-w-3xl text-slate-600">
+                On garde l'esprit de ton modèle, mais on y ajoute les vraies briques de Nzassa: langue, culture, IA et immersion.
+            </p>
+        </div>
+
+        <div class="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+            <article class="feature-card rounded-2xl bg-white p-6 shadow-soft">
+                <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-orange-100 text-primary">
+                    <i class="ri-translate-2-line text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Apprentissage des langues</h3>
+                <p class="mt-3 text-sm leading-7 text-slate-600">Des mots, expressions et salutations directement liés aux usages culturels.</p>
+            </article>
+
+            <article class="feature-card rounded-2xl bg-white p-6 shadow-soft">
+                <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-100 text-lagoon">
+                    <i class="ri-mic-line text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Voix et prononciation</h3>
+                <p class="mt-3 text-sm leading-7 text-slate-600">L'IA parle automatiquement et accompagne l'écoute active dès le premier contact.</p>
+            </article>
+
+            <article class="feature-card rounded-2xl bg-white p-6 shadow-soft">
+                <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-green-100 text-forest">
+                    <i class="ri-gamepad-line text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Mini-jeux éducatifs</h3>
+                <p class="mt-3 text-sm leading-7 text-slate-600">Quiz, association mot-image, écoute et phrases à compléter avec feedback immédiat.</p>
+            </article>
+
+            <article class="feature-card rounded-2xl bg-white p-6 shadow-soft">
+                <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-purple-100 text-cocoa">
+                    <i class="ri-vr-line text-2xl"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Immersion culturelle</h3>
+                <p class="mt-3 text-sm leading-7 text-slate-600">Une ouverture vers les lieux, objets, récits et expériences VR du projet.</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="ai-lab" class="mt-10 rounded-[28px] bg-white p-6 shadow-soft md:p-8">
+        <div class="mb-8 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-900">IA interactive intégrée à l'accueil</h2>
+                <p class="mt-3 max-w-3xl text-slate-600">
+                    L'utilisateur peut écrire ou parler. L'IA comprend les salutations locales, répond, pose une question simple
+                    et prononce automatiquement ses réponses.
+                </p>
+            </div>
+            <div class="rounded-2xl bg-slate-50 px-5 py-4 text-sm text-slate-600">
+                Mode supporté: texte, voix, questions simples, réponses dynamiques.
+            </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <article class="motif-card rounded-3xl border border-slate-200 p-5">
+                <div class="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-lagoon">Conversation Nzassa</div>
+                        <div class="mt-1 text-sm text-slate-500">Parle au coach comme dans une vraie séance d'apprentissage.</div>
+                    </div>
+                    <div class="inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.16em] text-forest">
+                        <span class="h-2.5 w-2.5 rounded-full bg-forest"></span>
+                        Actif
+                    </div>
+                </div>
+
+                <div id="ai-chat-log" class="space-y-3 rounded-3xl bg-white p-4 shadow-inner">
+                    <div class="ai-bubble-bot max-w-[85%] rounded-[22px] px-4 py-3 text-sm leading-7 text-slate-800">
+                        Bonjour. Je suis le coach Nzassa. Salue-moi en français, en baoulé ou en dioula, et je te répondrai.
+                    </div>
+                </div>
+
+                <div class="mt-5 grid gap-3 md:grid-cols-[1fr_auto_auto]">
+                    <input id="ai-user-input" type="text" class="w-full rounded-full border border-slate-300 px-5 py-4 text-sm outline-none focus:border-primary focus:ring-4 focus:ring-orange-100" placeholder="Exemple: bonjour, akwaba, i ni sogoma, je m'appelle Awa">
+                    <button id="ai-send-btn" class="rounded-button bg-primary px-5 py-4 text-sm font-bold text-white">Envoyer</button>
+                    <button id="ai-mic-btn" class="rounded-button bg-lagoon px-5 py-4 text-sm font-bold text-white">Parler</button>
+                </div>
+
+                <div class="mt-4 flex flex-wrap gap-2">
+                    <button class="js-ai-prompt rounded-full bg-orange-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-primary" data-prompt="bonjour">bonjour</button>
+                    <button class="js-ai-prompt rounded-full bg-yellow-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-cocoa" data-prompt="akwaba">akwaba</button>
+                    <button class="js-ai-prompt rounded-full bg-blue-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-lagoon" data-prompt="i ni sogoma">i ni sogoma</button>
+                    <button class="js-ai-prompt rounded-full bg-green-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-forest" data-prompt="je m'appelle Kadi">je m'appelle Kadi</button>
+                </div>
+            </article>
+
+            <aside class="space-y-5">
+                <div class="highlight-card rounded-3xl bg-gradient-to-br from-lagoon to-forest p-6 text-white shadow-soft">
+                    <h3 class="text-2xl font-bold">Ce que fait l'IA ici</h3>
+                    <div class="mt-5 space-y-4">
+                        <div class="rounded-2xl bg-white/10 p-4">
+                            <div class="font-bold">Comprendre les salutations</div>
+                            <p class="mt-2 text-sm leading-7 text-white/80">Bonjour, akwaba, i ni sogoma et d'autres intentions simples sont reconnues.</p>
+                        </div>
+                        <div class="rounded-2xl bg-white/10 p-4">
+                            <div class="font-bold">Répondre et relancer</div>
+                            <p class="mt-2 text-sm leading-7 text-white/80">Le coach répond puis relance avec une petite question pédagogique.</p>
+                        </div>
+                        <div class="rounded-2xl bg-white/10 p-4">
+                            <div class="font-bold">Parler automatiquement</div>
+                            <p class="mt-2 text-sm leading-7 text-white/80">Pas besoin d'un bouton de répétition: la voix se déclenche directement.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="highlight-card rounded-3xl bg-slate-50 p-6 shadow-soft">
+                    <h3 class="text-xl font-bold text-slate-900">Exemples de mots disponibles</h3>
+                    <div class="mt-4 space-y-3">
+                        {% for item in translation_examples|slice:":4" %}
+                            <div class="rounded-2xl bg-white px-4 py-3 shadow-sm">
+                                <div class="font-bold text-slate-900">{{ item.source|capfirst }}</div>
+                                <div class="mt-1 text-sm text-slate-600">{{ item.target }} · {{ item.language }}</div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <p id="voice-support-note" class="mt-4 text-sm font-medium text-slate-600">Vérification du support vocal en cours.</p>
+                </div>
+            </aside>
+        </div>
+    </section>
+
+    <section id="jouer" class="mt-10 rounded-[28px] bg-slate-50 p-6 md:p-8">
+        <div class="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-900">Apprendre en jouant</h2>
+                <p class="mt-3 max-w-3xl text-slate-600">
+                    Des jeux simples et engageants, directement sur l'accueil, pour donner envie d'apprendre sans friction.
+                </p>
+            </div>
+            <div class="rounded-2xl bg-white px-5 py-4 text-sm font-bold text-slate-700 shadow-sm">
+                Score total: <span id="games-total-score" class="text-primary">0</span>
+            </div>
+        </div>
+
+        <div class="grid gap-6 xl:grid-cols-2">
+            <article class="game-card rounded-3xl bg-white p-6 shadow-soft">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-primary">Quiz de vocabulaire</div>
+                        <h3 class="mt-2 text-2xl font-bold text-slate-900">Choisis la bonne réponse</h3>
+                    </div>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-orange-100 text-primary">
+                        <i class="ri-question-answer-line text-2xl"></i>
+                    </div>
+                </div>
+                <p id="quiz-question" class="mt-4 text-sm leading-7 text-slate-600">{{ landing_games.quiz.question }}</p>
+                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                    {% for choice in landing_games.quiz.choices %}
+                        <button class="js-quiz-choice rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-left text-sm font-bold text-slate-800 transition hover:bg-orange-50" data-choice="{{ choice }}">{{ choice }}</button>
+                    {% endfor %}
+                </div>
+                <p id="quiz-feedback" class="mt-4 text-sm font-bold text-forest">Sélectionne une réponse.</p>
+            </article>
+
+            <article class="game-card rounded-3xl bg-white p-6 shadow-soft">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-lagoon">Association mot → image</div>
+                        <h3 class="mt-2 text-2xl font-bold text-slate-900">Retrouve le bon symbole</h3>
+                    </div>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 text-lagoon">
+                        <i class="ri-image-circle-line text-2xl"></i>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-600">Quel élément correspond au mot <strong>{{ landing_games.match.answer|lower }}</strong> ?</p>
+                <div class="mt-5 grid gap-3 sm:grid-cols-3">
+                    {% for choice in landing_games.match.choices %}
+                        <button class="js-match-choice rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center transition hover:bg-blue-50" data-choice="{{ choice.label }}">
+                            <div class="text-4xl">{{ choice.emoji }}</div>
+                            <div class="mt-2 text-sm font-bold text-slate-800">{{ choice.label }}</div>
+                        </button>
+                    {% endfor %}
+                </div>
+                <p id="match-feedback" class="mt-4 text-sm font-bold text-forest">Observe bien puis choisis.</p>
+            </article>
+
+            <article class="game-card rounded-3xl bg-gradient-to-br from-lagoon to-forest p-6 text-white shadow-soft">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-white/70">Reconnaissance audio</div>
+                        <h3 class="mt-2 text-2xl font-bold">Écoute et choisis</h3>
+                    </div>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
+                        <i class="ri-volume-up-line text-2xl"></i>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-white/82">{{ landing_games.audio.prompt }}</p>
+                <div class="mt-5 flex flex-wrap gap-3">
+                    <button id="audio-game-play" class="rounded-button bg-white px-5 py-3 text-sm font-bold text-lagoon">Lancer l'audio</button>
+                    {% for choice in landing_games.audio.choices %}
+                        <button class="js-audio-choice rounded-button border border-white/15 bg-white/10 px-4 py-3 text-sm font-bold text-white" data-word="{{ choice }}">{{ choice }}</button>
+                    {% endfor %}
+                </div>
+                <p id="audio-feedback" class="mt-4 text-sm font-bold text-white/90">Appuie sur "Lancer l'audio" pour écouter.</p>
+            </article>
+
+            <article class="game-card rounded-3xl bg-white p-6 shadow-soft">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <div class="text-xs font-bold uppercase tracking-[0.22em] text-forest">Compléter la phrase</div>
+                        <h3 class="mt-2 text-2xl font-bold text-slate-900">Finis la phrase d'accueil</h3>
+                    </div>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-green-100 text-forest">
+                        <i class="ri-edit-2-line text-2xl"></i>
+                    </div>
+                </div>
+                <p class="mt-4 text-sm leading-7 text-slate-600">Complète: <strong>{{ landing_games.phrase.sentence }}</strong></p>
+                <div class="mt-5 grid gap-3 sm:grid-cols-[1fr_auto]">
+                    <input id="phrase-input" type="text" class="w-full rounded-full border border-slate-300 px-5 py-4 text-sm outline-none focus:border-forest focus:ring-4 focus:ring-green-100" placeholder="Écris le mot manquant">
+                    <button id="phrase-check-btn" class="rounded-button bg-forest px-5 py-4 text-sm font-bold text-white">Vérifier</button>
+                </div>
+                <p id="phrase-feedback" class="mt-4 text-sm font-bold text-forest">{{ landing_games.phrase.hint }}</p>
+            </article>
+        </div>
+    </section>
+
+    <section id="langues" class="mt-10">
+        <div class="mb-8 text-center">
+            <h2 class="text-3xl font-extrabold text-slate-900">Langues et richesse culturelle</h2>
+            <p class="mx-auto mt-3 max-w-3xl text-slate-600">
+                Une sélection vivante de langues, mots et parcours pour donner immédiatement envie de commencer.
+            </p>
+        </div>
+
+        <div class="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {% for item in discovered_vocabulary %}
+                <article class="language-card rounded-2xl bg-white p-5 shadow-soft">
+                    <div class="mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-yellow-100 text-primary">
+                        <i class="ri-translate-2-line text-2xl"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900">{{ item.word|capfirst }}</h3>
+                    <p class="mt-2 text-sm font-semibold uppercase tracking-[0.12em] text-slate-500">{{ item.language }}</p>
+                    <p class="mt-3 text-sm leading-7 text-slate-600">Source: {{ item.source }}</p>
+                </article>
+            {% empty %}
+                <article class="language-card rounded-2xl bg-white p-5 shadow-soft sm:col-span-2 lg:col-span-4">
+                    <h3 class="text-xl font-bold text-slate-900">Le vocabulaire apparaîtra ici</h3>
+                    <p class="mt-3 text-slate-600">Ajoute des contenus dans Django pour nourrir automatiquement cette section.</p>
+                </article>
             {% endfor %}
         </div>
     </section>
 
-    <section class="section-card surface-card" id="demo">
-        <div class="section-head"><div><h2>Demo deja presente dans ce projet</h2></div><p>Le projet contient deja une base interessante: dictionnaire dynamique, page de langue des signes et scene immersive. Cette demo sert maintenant aussi de point d'entree pour le coach IA.</p></div>
-        <div class="data-grid">
-            <div class="search-box">
-                <h3 style="margin-top:0;">Dictionnaire vivant</h3>
-                <p style="line-height:1.7; color:rgba(16,24,23,0.78);">Tape un mot francais pour tester la traduction actuelle et la lecture audio. Cette partie peut evoluer vers un vrai module d'apprentissage lexical.</p>
-                <input type="text" id="search-input" placeholder="Tapez un mot francais, par exemple: bonjour">
+    <section class="mt-10 rounded-[28px] bg-gradient-to-r from-primary to-secondary px-6 py-10 text-white shadow-soft md:px-10">
+        <div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div class="max-w-3xl">
+                <h2 class="text-3xl font-extrabold">Nzassa School: langue, culture, IA et immersion sur une seule page forte</h2>
+                <p class="mt-3 text-base leading-8 text-white/90">
+                    Cette nouvelle page d'accueil va à l'essentiel: présenter le projet, mettre en avant les modules,
+                    faire tester l'IA, jouer tout de suite, et donner envie d'aller plus loin.
+                </p>
             </div>
-            <div>
-                <h3 style="margin-top:0;">Pont avec les modules futurs</h3>
-                <ul class="check-list" style="margin-top:0;">
-                    <li>Le dictionnaire devient une entree vers les lecons</li>
-                    <li>La page signes devient un laboratoire d'accessibilite</li>
-                    <li>La VR devient un moteur d'immersion culturelle premium</li>
-                    <li>L'IA unifie conversation, correction et accompagnement</li>
-                </ul>
-                <div id="results-container" style="margin-top:18px;"><p class="no-result">Les resultats de la demo apparaitront ici.</p></div>
+            <div class="flex flex-col gap-3 sm:flex-row">
+                <a href="{% url 'register' %}" class="whitespace-nowrap rounded-button bg-white px-6 py-3 text-center text-base font-bold text-primary">
+                    S'inscrire
+                </a>
+                <a href="{% url 'course_catalog' %}" class="whitespace-nowrap rounded-button border border-white px-6 py-3 text-center text-base font-bold text-white">
+                    Voir les parcours
+                </a>
             </div>
         </div>
     </section>
 </div>
+{{ landing_games|json_script:"landing-games-data" }}
+{{ translation_examples|json_script:"landing-translation-data" }}
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    const input = document.getElementById('search-input');
-    const container = document.getElementById('results-container');
-    function parler(texte) {
-        const synthese = window.speechSynthesis;
-        const enonce = new SpeechSynthesisUtterance(texte);
-        enonce.lang = 'fr-FR';
-        enonce.rate = 0.9;
-        synthese.speak(enonce);
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return parts.pop().split(";").shift();
+        }
+        return "";
     }
-    input.addEventListener('input', (e) => {
-        const q = e.target.value.trim();
-        if (q.length > 1) {
-            fetch(`/chercher/?q=${encodeURIComponent(q)}`)
-                .then((response) => response.json())
-                .then((json) => {
-                    container.innerHTML = '';
-                    if (!json.data.length) {
-                        container.innerHTML = '<p class="no-result">Aucun mot trouve dans la demo actuelle.</p>';
-                        return;
-                    }
-                    json.data.forEach((item) => {
-                        container.innerHTML += `
-                            <div class="result-card">
-                                <div>
-                                    <span style="color:#6b7280;font-size:0.78rem;text-transform:uppercase;letter-spacing:0.08em;">${item.langue}</span><br>
-                                    <strong style="font-size:1.2rem;">${item.origine}</strong>
-                                    <span style="margin:0 8px;color:#6b7280;">-></span>
-                                    <span style="font-size:1.2rem;color:var(--forest);">${item.traduction}</span>
-                                </div>
-                                <button class="btn-audio" onclick="parler('${item.traduction}')" title="Ecouter">Audio</button>
-                            </div>`;
-                    });
-                });
-        } else {
-            container.innerHTML = '<p class="no-result">Les resultats de la demo apparaitront ici.</p>';
+
+    const csrfToken = getCookie("csrftoken");
+    const landingGames = JSON.parse(document.getElementById("landing-games-data").textContent);
+    JSON.parse(document.getElementById("landing-translation-data").textContent);
+    const voiceSupportNote = document.getElementById("voice-support-note");
+    const chatLog = document.getElementById("ai-chat-log");
+    const userInput = document.getElementById("ai-user-input");
+    const sendBtn = document.getElementById("ai-send-btn");
+    const micBtn = document.getElementById("ai-mic-btn");
+    const totalScoreEl = document.getElementById("games-total-score");
+    const quizFeedback = document.getElementById("quiz-feedback");
+    const matchFeedback = document.getElementById("match-feedback");
+    const audioFeedback = document.getElementById("audio-feedback");
+    const phraseFeedback = document.getElementById("phrase-feedback");
+    const phraseInput = document.getElementById("phrase-input");
+    const phraseCheckBtn = document.getElementById("phrase-check-btn");
+    const audioGamePlay = document.getElementById("audio-game-play");
+
+    let totalScore = 0;
+    let currentAudioAnswer = "";
+    let recognitionInstance = null;
+
+    const languageMap = {
+        fr: "fr-FR",
+        baoule: "fr-CI",
+        dioula: "fr-CI"
+    };
+
+    function updateTotalScore(points) {
+        totalScore += points;
+        totalScoreEl.textContent = totalScore;
+    }
+
+    function speakText(text, language = "fr") {
+        if (!window.speechSynthesis || !text) {
+            return;
+        }
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.lang = languageMap[language] || "fr-FR";
+        utterance.rate = 0.92;
+        utterance.pitch = 1.01;
+        window.speechSynthesis.speak(utterance);
+    }
+
+    function appendBubble(text, role) {
+        const bubble = document.createElement("div");
+        bubble.className = `${role === "user" ? "ai-bubble-user ml-auto" : "ai-bubble-bot"} max-w-[85%] rounded-[22px] px-4 py-3 text-sm leading-7 text-slate-800`;
+        bubble.textContent = text;
+        chatLog.appendChild(bubble);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    async function runConversation(message) {
+        const cleanMessage = (message || "").trim();
+        if (!cleanMessage) {
+            return;
+        }
+
+        appendBubble(cleanMessage, "user");
+
+        try {
+            const response = await fetch("{% url 'landing_ai_chat' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ message: cleanMessage })
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Erreur IA");
+            }
+
+            window.setTimeout(() => {
+                appendBubble(payload.text, "bot");
+                speakText(payload.text, payload.language);
+            }, 220);
+        } catch (error) {
+            appendBubble("Je rencontre un souci technique. Réessaie dans un instant avec une salutation simple.", "bot");
+        }
+    }
+
+    sendBtn.addEventListener("click", () => {
+        runConversation(userInput.value);
+        userInput.value = "";
+    });
+
+    userInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            event.preventDefault();
+            runConversation(userInput.value);
+            userInput.value = "";
         }
     });
+
+    document.querySelectorAll(".js-ai-prompt").forEach((button) => {
+        button.addEventListener("click", () => {
+            runConversation(button.dataset.prompt);
+        });
+    });
+
+    if ("webkitSpeechRecognition" in window || "SpeechRecognition" in window) {
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognitionInstance = new Recognition();
+        recognitionInstance.lang = "fr-FR";
+        recognitionInstance.continuous = false;
+        recognitionInstance.interimResults = false;
+
+        voiceSupportNote.textContent = "Reconnaissance vocale disponible. Tu peux parler directement au coach.";
+
+        recognitionInstance.addEventListener("result", (event) => {
+            const transcript = event.results[0][0].transcript;
+            userInput.value = transcript;
+            runConversation(transcript);
+            userInput.value = "";
+        });
+
+        recognitionInstance.addEventListener("error", () => {
+            voiceSupportNote.textContent = "La reconnaissance vocale a rencontré un souci. Le mode texte reste actif.";
+        });
+
+        micBtn.addEventListener("click", () => {
+            recognitionInstance.start();
+            voiceSupportNote.textContent = "Écoute en cours. Parle maintenant.";
+        });
+    } else {
+        voiceSupportNote.textContent = "Le navigateur ne prend pas en charge la reconnaissance vocale. Le mode texte reste disponible.";
+        micBtn.disabled = true;
+        micBtn.classList.add("cursor-not-allowed", "opacity-60");
+    }
+
+    document.querySelectorAll(".js-quiz-choice").forEach((button) => {
+        button.addEventListener("click", () => {
+            const isCorrect = button.dataset.choice === landingGames.quiz.answer;
+            quizFeedback.textContent = isCorrect
+                ? `Bonne réponse. ${landingGames.quiz.answer} est la bonne traduction.`
+                : "Ce n'est pas encore ça. Essaie encore.";
+            if (isCorrect) {
+                updateTotalScore(10);
+            }
+        });
+    });
+
+    document.querySelectorAll(".js-match-choice").forEach((button) => {
+        button.addEventListener("click", () => {
+            const isCorrect = button.dataset.choice === landingGames.match.answer;
+            matchFeedback.textContent = isCorrect
+                ? `Exact. ${landingGames.match.answer} est bien la bonne réponse.`
+                : "Essaie encore. Pense à la musique et au rythme.";
+            if (isCorrect) {
+                updateTotalScore(10);
+            }
+        });
+    });
+
+    audioGamePlay.addEventListener("click", () => {
+        currentAudioAnswer = landingGames.audio.answer;
+        audioFeedback.textContent = "Écoute le mot, puis choisis la bonne réponse.";
+        const audioLanguage = landingGames.audio.language.toLowerCase() === "baoule" ? "baoule" : "fr";
+        speakText(currentAudioAnswer, audioLanguage);
+    });
+
+    document.querySelectorAll(".js-audio-choice").forEach((button) => {
+        button.addEventListener("click", () => {
+            if (!currentAudioAnswer) {
+                audioFeedback.textContent = "Lance d'abord l'audio pour entendre le mot.";
+                return;
+            }
+            const isCorrect = button.dataset.word === currentAudioAnswer;
+            audioFeedback.textContent = isCorrect
+                ? "Bravo. Tu as reconnu le bon mot."
+                : "Pas encore. Relance l'audio et réécoute attentivement.";
+            if (isCorrect) {
+                updateTotalScore(10);
+            }
+        });
+    });
+
+    phraseCheckBtn.addEventListener("click", () => {
+        const guess = (phraseInput.value || "").trim().toLowerCase();
+        const isCorrect = guess === landingGames.phrase.answer.toLowerCase();
+        phraseFeedback.textContent = isCorrect
+            ? `Parfait. ${landingGames.phrase.answer} complète bien cette phrase d'accueil.`
+            : landingGames.phrase.hint;
+        if (isCorrect) {
+            updateTotalScore(10);
+        }
+    });
+
+    window.setTimeout(() => {
+        speakText("Bonjour. Bienvenue sur Nzassa School. Écris ou parle, et je commence la conversation avec toi.", "fr");
+    }, 900);
 </script>
 {% endblock %}

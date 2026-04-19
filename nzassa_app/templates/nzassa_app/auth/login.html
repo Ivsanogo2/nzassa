@@ -56,6 +56,9 @@
         <p>Reprenez votre apprentissage, votre streak et vos parcours Nzassa.</p>
         <form method="post" class="auth-form">
             {% csrf_token %}
+            {% if request.GET.next %}
+                <input type="hidden" name="next" value="{{ request.GET.next }}">
+            {% endif %}
             {% for field in form %}
                 <div>
                     <label for="{{ field.id_for_label }}">{{ field.label }}</label>
