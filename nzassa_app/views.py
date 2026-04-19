@@ -13,6 +13,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
+from django.http import HttpResponse
 
 from .forms import NzassaLoginForm, NzassaRegistrationForm
 from .models import (
@@ -873,9 +874,16 @@ def landing_ai_chat(request):
     return JsonResponse(response)
 
 
+
+def ping(request):
+    return HttpResponse("OK")
+
 @login_required
 @require_POST
 def logout_view(request):
     logout(request)
     messages.success(request, "Vous etes maintenant deconnecte en toute securite.")
     return redirect("accueil")
+
+
+
