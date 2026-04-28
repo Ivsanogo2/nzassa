@@ -4,80 +4,340 @@
 
 {% block content %}
 <style>
-    .coach-stack { display: grid; gap: 24px; }
+    .coach-shell { display: grid; gap: 24px; }
     .coach-hero, .coach-card { padding: 30px; }
-    .coach-hero { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr); gap: 18px; align-items: start; }
+    .coach-hero {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr);
+        gap: 18px;
+        align-items: start;
+    }
     .coach-hero h1, .coach-card h2 { margin-top: 0; }
-    .coach-hero h1 { font-family: "Space Grotesk", sans-serif; font-size: clamp(2.2rem, 4vw, 3.8rem); line-height: 0.95; margin-bottom: 12px; }
-    .coach-side { padding: 22px; border-radius: 24px; background: linear-gradient(145deg, rgba(8, 48, 77, 0.96), rgba(21, 94, 75, 0.94)); color: white; }
-    .coach-side strong { display: block; font-size: 2rem; margin-bottom: 6px; }
-    .coach-form { display: grid; gap: 14px; margin-top: 20px; }
-    .coach-form input { width: 100%; border-radius: 18px; border: 1px solid rgba(16, 24, 23, 0.12); padding: 16px 18px; font-size: 1rem; background: rgba(255, 255, 255, 0.95); }
-    .coach-form button { width: fit-content; border: none; border-radius: 999px; padding: 14px 20px; font-weight: 800; cursor: pointer; color: white; background: linear-gradient(135deg, var(--clay), var(--gold)); box-shadow: 0 16px 28px rgba(196, 90, 45, 0.24); }
-    .coach-grid, .word-grid, .course-grid, .lab-grid, .practice-grid { display: grid; gap: 16px; }
-    .coach-grid { grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); }
-    .word-grid, .course-grid, .lab-grid, .practice-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .answer-box, .mini-box, .word-card, .course-card, .lab-card, .practice-card { padding: 20px; border-radius: 22px; border: 1px solid rgba(16, 24, 23, 0.08); background: rgba(255, 255, 255, 0.62); }
-    .answer-box ul, .mini-box ul { margin: 14px 0 0; padding-left: 18px; line-height: 1.75; }
-    .word-card strong, .course-card strong { display: block; margin-bottom: 6px; font-size: 1.1rem; }
-    .meta { color: rgba(16, 24, 23, 0.62); font-size: 0.92rem; line-height: 1.6; }
-    .coach-bubble { border-radius: 22px; padding: 18px 20px; background: linear-gradient(135deg, rgba(196, 90, 45, 0.1), rgba(241, 178, 74, 0.14)); border: 1px solid rgba(196, 90, 45, 0.18); line-height: 1.8; }
-    .speak-btn, .ghost-btn { border: none; border-radius: 999px; padding: 11px 16px; font-weight: 800; cursor: pointer; }
-    .speak-btn { color: white; background: linear-gradient(135deg, var(--clay), var(--gold)); }
-    .ghost-btn { background: rgba(8, 48, 77, 0.08); color: var(--lagoon); }
-    .practice-card .status { color: var(--forest); font-weight: 700; }
-    @media (max-width: 980px) { .coach-hero, .coach-grid, .word-grid, .course-grid, .lab-grid, .practice-grid { grid-template-columns: 1fr; } }
+    .coach-hero h1 {
+        font-family: "Space Grotesk", sans-serif;
+        font-size: clamp(2.2rem, 4vw, 3.8rem);
+        line-height: 0.94;
+        margin-bottom: 12px;
+    }
+    .coach-side {
+        padding: 24px;
+        border-radius: 24px;
+        background:
+            radial-gradient(circle at top right, rgba(241, 178, 74, 0.28), transparent 30%),
+            linear-gradient(145deg, rgba(8, 48, 77, 0.96), rgba(21, 94, 75, 0.94));
+        color: white;
+    }
+    .coach-side strong {
+        display: block;
+        font-size: 2rem;
+        margin-bottom: 6px;
+    }
+    .coach-form {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
+        gap: 12px;
+        margin-top: 22px;
+    }
+    .coach-form input {
+        width: 100%;
+        border-radius: 18px;
+        border: 1px solid rgba(16, 24, 23, 0.12);
+        padding: 16px 18px;
+        font-size: 1rem;
+        background: rgba(255, 255, 255, 0.95);
+    }
+    .coach-form button, .action-btn, .suggestion-chip {
+        border: none;
+        border-radius: 999px;
+        font-weight: 800;
+        cursor: pointer;
+    }
+    .coach-form button, .action-btn {
+        padding: 14px 20px;
+        color: white;
+        background: linear-gradient(135deg, var(--clay), var(--gold));
+        box-shadow: 0 16px 28px rgba(196, 90, 45, 0.24);
+    }
+    .coach-form .secondary-btn {
+        background: linear-gradient(135deg, var(--lagoon), var(--forest));
+        box-shadow: 0 16px 28px rgba(8, 48, 77, 0.22);
+    }
+    .coach-grid, .cards-grid, .course-grid, .vocab-grid {
+        display: grid;
+        gap: 16px;
+    }
+    .coach-grid { grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr); }
+    .cards-grid, .course-grid, .vocab-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .chat-shell, .memory-shell, .lab-card, .course-card, .vocab-card, .coach-box {
+        padding: 20px;
+        border-radius: 22px;
+        border: 1px solid rgba(16, 24, 23, 0.08);
+        background: rgba(255, 255, 255, 0.66);
+    }
+    .chat-log {
+        min-height: 380px;
+        max-height: 540px;
+        overflow-y: auto;
+        display: grid;
+        gap: 14px;
+        padding-right: 6px;
+    }
+    .bubble {
+        max-width: 88%;
+        border-radius: 22px;
+        padding: 16px 18px;
+        line-height: 1.78;
+    }
+    .bubble.assistant {
+        background: linear-gradient(135deg, rgba(8, 48, 77, 0.1), rgba(21, 94, 75, 0.15));
+    }
+    .bubble.user {
+        margin-left: auto;
+        background: linear-gradient(135deg, rgba(196, 90, 45, 0.1), rgba(241, 178, 74, 0.16));
+    }
+    .chat-status, .tiny-meta {
+        color: rgba(16, 24, 23, 0.66);
+        font-size: 0.94rem;
+        line-height: 1.7;
+    }
+    .suggestion-row, .action-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .suggestion-chip {
+        padding: 10px 14px;
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+    }
+    .memory-list, .coach-list {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+    }
+    .memory-item {
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, 0.16);
+    }
+    .memory-item strong, .lab-card strong, .course-card strong, .vocab-card strong {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 1.05rem;
+    }
+    .mode-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.14);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+    }
+    .mode-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 999px;
+        background: #f1b24a;
+    }
+    .lab-card.is-active {
+        border-color: rgba(196, 90, 45, 0.4);
+        box-shadow: 0 12px 24px rgba(196, 90, 45, 0.16);
+    }
+    .feedback-box {
+        padding: 20px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, rgba(196, 90, 45, 0.1), rgba(241, 178, 74, 0.14));
+        border: 1px solid rgba(196, 90, 45, 0.18);
+    }
+    .score-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 88px;
+        padding: 10px 12px;
+        border-radius: 999px;
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+        font-weight: 800;
+    }
+    .coach-box ul {
+        margin: 14px 0 0;
+        padding-left: 18px;
+        line-height: 1.8;
+    }
+    @media (max-width: 1100px) {
+        .coach-hero, .coach-grid, .cards-grid, .course-grid, .vocab-grid, .coach-form {
+            grid-template-columns: 1fr;
+        }
+    }
 </style>
 
-<div class="coach-stack">
+<div class="coach-shell">
     <section class="surface-card coach-hero">
         <div>
-            <p style="margin-top:0;color:var(--forest);font-weight:800;text-transform:uppercase;letter-spacing:0.08em;">IA langues et cours</p>
-            <h1>Un coach qui relie les mots, les parcours et les lecons.</h1>
-            <p style="line-height:1.8;color:rgba(16,24,23,0.8);">
-                Cette IA locale n'attend pas une API externe pour etre utile. Elle apprend deja les mots presents
-                dans la plateforme, les transforme en suggestions, puis ajoute une pratique orale et un rythme de repetition.
+            <p style="margin-top:0;color:var(--forest);font-weight:800;text-transform:uppercase;letter-spacing:0.08em;">Memoire, voix et conversation</p>
+            <h1>Un coach IA qui apprend les mots avec toi et travaille la prononciation.</h1>
+            <p style="line-height:1.8;color:rgba(16,24,23,0.82);">
+                Le coach ne se contente plus de repeter. Il garde une memoire des mots deja vus, relie les lecons a ta demande,
+                propose des exercices oraux, et peut utiliser un moteur conversationnel distant si une cle OpenRouter, Hugging Face ou OpenAI est configuree.
             </p>
-            <form method="get" class="coach-form">
-                <input type="text" name="prompt" value="{{ prompt }}" placeholder="Exemple: apprends-moi bonjour, mots pour voyager, ou baoule debutant">
-                <button type="submit">Lancer le coach</button>
+            <form id="coach-chat-form" class="coach-form">
+                <input id="coach-user-input" type="text" value="{{ prompt }}" placeholder="Exemple: apprends-moi bonjour en baoule, corrige ma prononciation, ou fais-moi une mini conversation">
+                <button type="submit">Envoyer</button>
+                <button type="button" id="coach-mic-btn" class="secondary-btn">Parler</button>
             </form>
+            <div id="coach-suggestions" class="suggestion-row" style="margin-top:14px;">
+                <button type="button" class="suggestion-chip js-suggestion-chip" data-prompt="Apprends-moi bonjour en baoule">Apprends-moi bonjour en baoule</button>
+                <button type="button" class="suggestion-chip js-suggestion-chip" data-prompt="Corrige ma prononciation de Akwaba">Corrige ma prononciation</button>
+                <button type="button" class="suggestion-chip js-suggestion-chip" data-prompt="Fais-moi une mini conversation en dioula">Mini conversation</button>
+            </div>
         </div>
         <aside class="coach-side">
-            <strong>{{ guidance.discovered_vocabulary|length }}</strong>
-            <span>Mots prioritaires remontes par l'IA locale</span>
-            <p style="line-height:1.75;color:rgba(255,255,255,0.82);margin-bottom:0;">
+            <div class="mode-pill">
+                <span class="mode-dot"></span>
+                {% if remote_ai_status.enabled %}{{ remote_ai_status.label }} actif{% else %}Mode local intelligent{% endif %}
+            </div>
+            <strong>{{ learned_words|length }}</strong>
+            <span>Mots memorises dans ton parcours actuel</span>
+            <p style="line-height:1.75;color:rgba(255,255,255,0.82);margin-bottom:0;margin-top:14px;">
                 {% if selected_language %}
                     Langue preferee detectee: {{ selected_language.name }}.
                 {% else %}
-                    Connecte-toi pour personnaliser encore plus les suggestions.
+                    Connecte-toi pour garder une memoire encore plus personnelle d'une session a l'autre.
                 {% endif %}
+            </p>
+            <p style="line-height:1.7;color:rgba(255,255,255,0.82);margin-bottom:0;margin-top:14px;">
+                Astuce gratuite: installe Ollama pour un vrai modele local sans cle, ou ajoute `OPENROUTER_API_KEY` dans `.env` pour utiliser `openrouter/free`.
             </p>
         </aside>
     </section>
 
     <section class="coach-grid">
         <article class="surface-card coach-card">
+            <div class="chat-shell">
+                <h2>Conversation vivante</h2>
+                <div id="coach-chat-log" class="chat-log">
+                    {% if conversation_messages %}
+                        {% for message in conversation_messages %}
+                            <div class="bubble {{ message.role }}">{{ message.content|linebreaksbr }}</div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="bubble assistant">
+                            Bonjour. Je suis le Coach Nzassa. Dis-moi le mot, la phrase ou la situation que tu veux apprendre, et je vais te guider avec sens, prononciation et memoire.
+                        </div>
+                    {% endif %}
+                </div>
+                <p id="coach-chat-status" class="chat-status" style="margin-bottom:0;margin-top:14px;">
+                    {% if remote_ai_status.enabled %}
+                        Le moteur {{ remote_ai_status.label }} est disponible avec le modele {{ remote_ai_status.model }}. La memoire locale des mots reste active.
+                    {% else %}
+                        Le mode local reste actif meme sans API externe, avec memoire des mots et exercices de prononciation.
+                    {% endif %}
+                </p>
+            </div>
+        </article>
+
+        <aside class="surface-card coach-card">
+            <div class="memory-shell">
+                <h2>Memoire d'apprentissage</h2>
+                <p class="tiny-meta" style="margin-top:0;">
+                    Les mots travailles apparaissent ici avec leur niveau de maitrise. Plus tu pratiques, plus le coach te suit finement.
+                </p>
+                <div id="learned-words-list" class="memory-list">
+                    {% for item in learned_words %}
+                        <div class="memory-item">
+                            <strong>{{ item.word }}</strong>
+                            <div class="tiny-meta">
+                                {% if item.language_label %}
+                                    {{ item.language_label }}
+                                {% elif item.language %}
+                                    {{ item.language.name }}
+                                {% else %}
+                                    Francais
+                                {% endif %}
+                            </div>
+                            <div class="tiny-meta">Maitrise: {{ item.mastery_level }}% · Reussite orale: {{ item.success_rate }}%</div>
+                        </div>
+                    {% empty %}
+                        <div class="memory-item">
+                            <strong>Memoire vide pour l'instant</strong>
+                            <div class="tiny-meta">Commence une conversation ou un exercice oral pour remplir cette zone.</div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </aside>
+    </section>
+
+    <section class="surface-card coach-card">
+        <h2>Laboratoire de prononciation</h2>
+        <div class="coach-grid">
+            <div class="coach-box">
+                <p style="margin-top:0;line-height:1.8;">Choisis un mot du laboratoire, ecoute-le, puis parle pour recevoir un retour sur la prononciation.</p>
+                <div id="pronunciation-cards-grid" class="cards-grid">
+                    {% for card in guidance.pronunciation_cards %}
+                        <article class="lab-card{% if forloop.first %} is-active{% endif %}" data-index="{{ forloop.counter0 }}" data-word="{{ card.word }}" data-language="{{ card.language }}" data-origin="{{ card.origin }}" data-voice="{{ card.voice }}">
+                            <strong>{{ card.word }}</strong>
+                            <div class="tiny-meta">{{ card.language }} · origine: {{ card.origin }}</div>
+                            <p style="line-height:1.7;">{{ card.pronunciation_tip }}</p>
+                            <div class="action-row">
+                                <button type="button" class="action-btn js-listen-card">Ecouter</button>
+                                <button type="button" class="action-btn secondary-btn js-practice-card">Choisir</button>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="coach-box">
+                <div class="feedback-box">
+                    <h3 id="practice-word" style="margin-top:0;">{{ guidance.pronunciation_cards.0.word|default:"Choisis un mot" }}</h3>
+                    <p id="practice-origin" class="tiny-meta">
+                        {% if guidance.pronunciation_cards %}
+                            {{ guidance.pronunciation_cards.0.language }} · {{ guidance.pronunciation_cards.0.origin }}
+                        {% else %}
+                            Le mot choisi apparaitra ici.
+                        {% endif %}
+                    </p>
+                    <p id="practice-prompt" style="line-height:1.8;">
+                        {% if guidance.pronunciation_cards %}
+                            {{ guidance.pronunciation_cards.0.coach_prompt }}
+                        {% else %}
+                            Commence une conversation pour voir des cartes de pratique.
+                        {% endif %}
+                    </p>
+                    <div class="action-row" style="margin-top:14px;">
+                        <button type="button" id="listen-active-word" class="action-btn">Ecouter le mot</button>
+                        <button type="button" id="record-active-word" class="action-btn secondary-btn">Tester ma prononciation</button>
+                    </div>
+                    <div style="margin-top:16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                        <span id="pronunciation-score" class="score-badge">Score: --</span>
+                        <span id="pronunciation-level" class="score-badge">Maitrise: --</span>
+                    </div>
+                    <p id="pronunciation-status" class="chat-status" style="margin-bottom:0;margin-top:16px;">
+                        Le navigateur ecoutera ta voix puis comparera le mot prononce avec le mot attendu.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="coach-grid">
+        <article class="surface-card coach-card">
             <h2>{{ guidance.headline }}</h2>
-            <div class="coach-bubble">{{ guidance.conversation_opening }}</div>
-            <div class="answer-box">
-                <p style="margin-top:0;line-height:1.8;">{{ guidance.summary }}</p>
+            <div class="coach-box">
+                <p style="margin-top:0;line-height:1.8;">{{ guidance.conversation_opening }}</p>
+                <p class="tiny-meta">{{ guidance.summary }}</p>
                 <ul>
                     {% for action in guidance.actions %}
                         <li>{{ action }}</li>
                     {% endfor %}
                 </ul>
             </div>
-            {% if guidance.matches %}
-                <div class="mini-box" style="margin-top:16px;">
-                    <strong>Correspondances retrouvees</strong>
-                    <ul>
-                        {% for match in guidance.matches %}
-                            <li>{{ match }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            {% endif %}
         </article>
 
         <article class="surface-card coach-card">
@@ -86,7 +346,7 @@
                 {% for course in guidance.related_courses|default:featured_courses %}
                     <div class="course-card">
                         <strong>{{ course.title }}</strong>
-                        <div class="meta">{{ course.language.name }} · {{ course.level }}</div>
+                        <div class="tiny-meta">{{ course.language.name }} · {{ course.level }}</div>
                         <p style="line-height:1.7;">{{ course.short_description }}</p>
                         <a href="{% url 'course_detail' course.slug %}">Voir le parcours</a>
                     </div>
@@ -96,100 +356,345 @@
     </section>
 
     <section class="surface-card coach-card">
-        <h2>Laboratoire oral</h2>
-        <div class="lab-grid">
-            {% for card in guidance.pronunciation_cards %}
-                <article class="lab-card" data-word="{{ card.word }}" data-voice="{{ card.voice }}">
-                    <strong>{{ card.word }}</strong>
-                    <div class="meta">{{ card.language }} · origine: {{ card.origin }}</div>
-                    <p style="line-height:1.7;">{{ card.pronunciation_tip }}</p>
-                    <p class="meta" style="margin-bottom:14px;">{{ card.coach_prompt }}</p>
-                    <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                        <button type="button" class="speak-btn js-speak-word">Ecouter</button>
-                        <button type="button" class="ghost-btn js-repeat-word">Repeter</button>
-                    </div>
-                </article>
-            {% endfor %}
-        </div>
-    </section>
-
-    <section class="surface-card coach-card">
-        <h2>Apprentissage interactif</h2>
-        <div class="practice-grid">
-            <article class="practice-card">
-                <strong>Routine en 3 temps</strong>
-                <ul style="line-height:1.8;">
-                    {% for step in guidance.practice_loop %}
-                        <li>{{ step }}</li>
-                    {% endfor %}
-                </ul>
-            </article>
-            <article class="practice-card">
-                <strong>Mode repetition</strong>
-                <p id="repeat-target" style="line-height:1.8;">Choisis un mot du laboratoire oral, puis clique sur "Repeter".</p>
-                <p id="repeat-status" class="status">Pret a guider une repetition.</p>
-            </article>
-        </div>
-    </section>
-
-    <section class="surface-card coach-card">
-        <h2>Mots que l'IA a appris seule</h2>
-        <div class="word-grid">
+        <h2>Mots que le coach garde en tete</h2>
+        <div class="vocab-grid">
             {% for item in guidance.discovered_vocabulary %}
-                <div class="word-card">
+                <div class="vocab-card">
                     <strong>{{ item.word }}</strong>
-                    <div class="meta">{{ item.language }}</div>
-                    <div class="meta">Source: {{ item.source }}</div>
-                    <p style="margin-bottom:0;line-height:1.7;">{{ item.hint|truncatechars:80 }}</p>
+                    <div class="tiny-meta">{{ item.language }}</div>
+                    <div class="tiny-meta">Source: {{ item.source }}</div>
+                    <p style="margin-bottom:0;line-height:1.7;">{{ item.hint|truncatechars:90 }}</p>
                 </div>
             {% endfor %}
         </div>
     </section>
 </div>
+
 {{ guidance.pronunciation_cards|json_script:"coach-pronunciations" }}
 {% endblock %}
 
 {% block extra_scripts %}
 <script>
-    const speech = window.speechSynthesis;
-    const repeatTarget = document.getElementById("repeat-target");
-    const repeatStatus = document.getElementById("repeat-status");
-    const pronunciationCards = JSON.parse(document.getElementById("coach-pronunciations").textContent);
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) {
+            return parts.pop().split(";").shift();
+        }
+        return "";
+    }
 
-    function speakText(text, lang) {
+    const csrfToken = getCookie("csrftoken");
+    const speech = window.speechSynthesis;
+    const chatForm = document.getElementById("coach-chat-form");
+    const userInput = document.getElementById("coach-user-input");
+    const chatLog = document.getElementById("coach-chat-log");
+    const chatStatus = document.getElementById("coach-chat-status");
+    const suggestionRow = document.getElementById("coach-suggestions");
+    const learnedWordsList = document.getElementById("learned-words-list");
+    const pronunciationCardsGrid = document.getElementById("pronunciation-cards-grid");
+    const pronunciationStatus = document.getElementById("pronunciation-status");
+    const pronunciationScore = document.getElementById("pronunciation-score");
+    const pronunciationLevel = document.getElementById("pronunciation-level");
+    const practiceWord = document.getElementById("practice-word");
+    const practiceOrigin = document.getElementById("practice-origin");
+    const practicePrompt = document.getElementById("practice-prompt");
+    const listenActiveWordBtn = document.getElementById("listen-active-word");
+    const recordActiveWordBtn = document.getElementById("record-active-word");
+    const coachMicBtn = document.getElementById("coach-mic-btn");
+
+    let pronunciationCards = JSON.parse(document.getElementById("coach-pronunciations").textContent || "[]");
+    let activeCardIndex = 0;
+
+    function escapeHtml(text) {
+        return (text || "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;");
+    }
+
+    function speakText(text, voice) {
         if (!speech || !text) {
             return;
         }
         speech.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = lang || "fr-FR";
-        utterance.rate = 0.88;
+        utterance.lang = voice || "fr-FR";
+        utterance.rate = 0.9;
         utterance.pitch = 1.02;
         speech.speak(utterance);
     }
 
-    document.querySelectorAll(".js-speak-word").forEach((button, index) => {
-        button.addEventListener("click", () => {
-            const item = pronunciationCards[index];
-            if (!item) {
-                return;
-            }
-            speakText(`${item.word}. ${item.coach_prompt}`, item.voice);
-            repeatStatus.textContent = `Ecoute active pour ${item.word}.`;
+    function appendBubble(text, role) {
+        const bubble = document.createElement("div");
+        bubble.className = `bubble ${role}`;
+        bubble.innerHTML = escapeHtml(text).replaceAll("\n", "<br>");
+        chatLog.appendChild(bubble);
+        chatLog.scrollTop = chatLog.scrollHeight;
+    }
+
+    function renderSuggestionChips(suggestions) {
+        if (!suggestions || !suggestions.length) {
+            return;
+        }
+        suggestionRow.innerHTML = suggestions
+            .map((suggestion) => `<button type="button" class="suggestion-chip js-suggestion-chip" data-prompt="${escapeHtml(suggestion)}">${escapeHtml(suggestion)}</button>`)
+            .join("");
+        bindSuggestionChips();
+    }
+
+    function renderLearnedWords(words) {
+        if (!words || !words.length) {
+            learnedWordsList.innerHTML = `
+                <div class="memory-item">
+                    <strong>Memoire vide pour l'instant</strong>
+                    <div class="tiny-meta">Commence une conversation ou un exercice oral pour remplir cette zone.</div>
+                </div>
+            `;
+            return;
+        }
+
+        learnedWordsList.innerHTML = words
+            .map((word) => `
+                <div class="memory-item">
+                    <strong>${escapeHtml(word.word)}</strong>
+                    <div class="tiny-meta">${escapeHtml(word.language || "Francais")}</div>
+                    <div class="tiny-meta">Maitrise: ${word.mastery_level}% · Reussite orale: ${word.success_rate}%</div>
+                </div>
+            `)
+            .join("");
+    }
+
+    function setActiveCard(index) {
+        activeCardIndex = index;
+        const activeCard = pronunciationCards[index];
+        document.querySelectorAll(".lab-card").forEach((card, cardIndex) => {
+            card.classList.toggle("is-active", cardIndex === index);
         });
+
+        if (!activeCard) {
+            return;
+        }
+
+        practiceWord.textContent = activeCard.word;
+        practiceOrigin.textContent = `${activeCard.language} · ${activeCard.origin}`;
+        practicePrompt.textContent = activeCard.coach_prompt;
+        pronunciationStatus.textContent = activeCard.pronunciation_tip;
+    }
+
+    function renderPronunciationCards(cards) {
+        pronunciationCards = cards || [];
+
+        if (!pronunciationCards.length) {
+            pronunciationCardsGrid.innerHTML = `
+                <div class="lab-card is-active">
+                    <strong>Pas encore de carte</strong>
+                    <div class="tiny-meta">Commence une conversation pour faire apparaitre des mots a pratiquer.</div>
+                </div>
+            `;
+            setActiveCard(0);
+            return;
+        }
+
+        pronunciationCardsGrid.innerHTML = pronunciationCards
+            .map((card, index) => `
+                <article class="lab-card ${index === 0 ? "is-active" : ""}" data-index="${index}">
+                    <strong>${escapeHtml(card.word)}</strong>
+                    <div class="tiny-meta">${escapeHtml(card.language)} · origine: ${escapeHtml(card.origin)}</div>
+                    <p style="line-height:1.7;">${escapeHtml(card.pronunciation_tip)}</p>
+                    <div class="action-row">
+                        <button type="button" class="action-btn js-listen-card">Ecouter</button>
+                        <button type="button" class="action-btn secondary-btn js-practice-card">Choisir</button>
+                    </div>
+                </article>
+            `)
+            .join("");
+
+        bindCardActions();
+        setActiveCard(0);
+    }
+
+    function bindCardActions() {
+        pronunciationCardsGrid.querySelectorAll(".lab-card").forEach((card) => {
+            const index = Number(card.dataset.index || 0);
+            const listenBtn = card.querySelector(".js-listen-card");
+            const practiceBtn = card.querySelector(".js-practice-card");
+
+            listenBtn.addEventListener("click", () => {
+                const item = pronunciationCards[index];
+                if (!item) {
+                    return;
+                }
+                setActiveCard(index);
+                speakText(`${item.word}. ${item.coach_prompt}`, item.voice);
+            });
+
+            practiceBtn.addEventListener("click", () => {
+                setActiveCard(index);
+            });
+        });
+    }
+
+    async function sendMessage(message) {
+        const cleanMessage = (message || "").trim();
+        if (!cleanMessage) {
+            return;
+        }
+
+        appendBubble(cleanMessage, "user");
+        chatStatus.textContent = "Le coach reflechit et prepare la suite de l'apprentissage...";
+
+        try {
+            const response = await fetch("{% url 'coach_ai_chat' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({ message: cleanMessage })
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Erreur IA");
+            }
+
+            appendBubble(payload.reply, "assistant");
+            speakText(payload.reply, payload.voice);
+            chatStatus.textContent = payload.source !== "local"
+                ? `Reponse generee par ${payload.provider_label || payload.source} avec enrichissement par la memoire Nzassa.`
+                : "Reponse generee par le moteur local avec memoire des mots et contenus de la plateforme.";
+            renderSuggestionChips(payload.suggestions || []);
+            renderLearnedWords(payload.learned_words || []);
+            renderPronunciationCards(payload.pronunciation_cards || []);
+            pronunciationScore.textContent = "Score: --";
+            pronunciationLevel.textContent = "Maitrise: --";
+        } catch (error) {
+            appendBubble("Je rencontre un souci technique. Reessaie avec un mot simple ou une autre phrase.", "assistant");
+            chatStatus.textContent = "Le coach a rencontre un souci temporaire.";
+        }
+    }
+
+    async function submitPronunciationTranscript(card, transcript) {
+        if (!card) {
+            return;
+        }
+
+        pronunciationStatus.textContent = `Analyse de ta prononciation de ${card.word}...`;
+
+        try {
+            const response = await fetch("{% url 'coach_pronunciation_feedback' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": csrfToken
+                },
+                body: JSON.stringify({
+                    word: card.word,
+                    transcript: transcript,
+                    language: card.language,
+                    meaning: card.origin
+                })
+            });
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || "Erreur prononciation");
+            }
+
+            pronunciationScore.textContent = `Score: ${payload.score}%`;
+            pronunciationLevel.textContent = `Maitrise: ${payload.mastery_level}%`;
+            pronunciationStatus.textContent = payload.feedback;
+        } catch (error) {
+            pronunciationStatus.textContent = "Impossible d'analyser la prononciation pour l'instant. Reessaie dans quelques secondes.";
+        }
+    }
+
+    function buildRecognitionHandler(onResult) {
+        const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!Recognition) {
+            return null;
+        }
+
+        const recognition = new Recognition();
+        recognition.lang = "fr-FR";
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.addEventListener("result", (event) => {
+            const transcript = event.results[0][0].transcript;
+            onResult(transcript);
+        });
+        recognition.addEventListener("error", () => {
+            chatStatus.textContent = "La reconnaissance vocale a rencontre un souci. Le mode texte reste disponible.";
+            pronunciationStatus.textContent = "La reconnaissance vocale a rencontre un souci. Tu peux reessayer.";
+        });
+        return recognition;
+    }
+
+    function startChatVoiceInput() {
+        const recognition = buildRecognitionHandler((transcript) => {
+            userInput.value = "";
+            sendMessage(transcript);
+        });
+
+        if (!recognition) {
+            chatStatus.textContent = "La reconnaissance vocale n'est pas prise en charge par ce navigateur.";
+            return;
+        }
+
+        chatStatus.textContent = "Ecoute en cours. Parle au coach maintenant.";
+        recognition.start();
+    }
+
+    function startPronunciationCheck() {
+        const card = pronunciationCards[activeCardIndex];
+        if (!card) {
+            pronunciationStatus.textContent = "Choisis d'abord un mot a pratiquer.";
+            return;
+        }
+
+        const recognition = buildRecognitionHandler((transcript) => {
+            submitPronunciationTranscript(card, transcript);
+        });
+
+        if (!recognition) {
+            pronunciationStatus.textContent = "La reconnaissance vocale n'est pas disponible sur ce navigateur.";
+            return;
+        }
+
+        pronunciationStatus.textContent = `Prononce maintenant: ${card.word}`;
+        recognition.start();
+    }
+
+    function bindSuggestionChips() {
+        suggestionRow.querySelectorAll(".js-suggestion-chip").forEach((button) => {
+            button.addEventListener("click", () => {
+                const prompt = button.dataset.prompt || button.textContent;
+                userInput.value = prompt;
+                sendMessage(prompt);
+                userInput.value = "";
+            });
+        });
+    }
+
+    chatForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        sendMessage(userInput.value);
+        userInput.value = "";
     });
 
-    document.querySelectorAll(".js-repeat-word").forEach((button, index) => {
-        button.addEventListener("click", () => {
-            const item = pronunciationCards[index];
-            if (!item) {
-                return;
-            }
-            repeatTarget.textContent = `Repete maintenant: ${item.word}. Puis dis une phrase avec ce mot.`;
-            repeatStatus.textContent = `Exercice lance pour ${item.word}.`;
-            speakText(`Repete apres moi. ${item.word}`, item.voice);
-            window.setTimeout(() => speakText(item.word, item.voice), 1600);
-        });
+    coachMicBtn.addEventListener("click", startChatVoiceInput);
+    listenActiveWordBtn.addEventListener("click", () => {
+        const card = pronunciationCards[activeCardIndex];
+        if (!card) {
+            pronunciationStatus.textContent = "Choisis d'abord un mot a ecouter.";
+            return;
+        }
+        speakText(`${card.word}. ${card.coach_prompt}`, card.voice);
     });
+    recordActiveWordBtn.addEventListener("click", startPronunciationCheck);
+
+    bindSuggestionChips();
+    bindCardActions();
+    setActiveCard(0);
+    chatLog.scrollTop = chatLog.scrollHeight;
 </script>
 {% endblock %}

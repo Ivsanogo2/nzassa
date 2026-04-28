@@ -288,3 +288,141 @@ class CulturalExperience(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class CoachConversation(models.Model):
+    CHANNEL_CHOICES = [
+        ("coach", "Coach IA"),
+        ("landing", "Accueil"),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="coach_conversations",
+    )
+    session_key = models.CharField(max_length=80, blank=True, db_index=True)
+    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES, default="coach")
+    selected_language = models.ForeignKey(
+        Language,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="coach_conversations",
+    )
+    title = models.CharField(max_length=180, blank=True)
+    last_remote_response_id = models.CharField(max_length=120, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-updated_at"]
+
+    def __str__(self):
+        owner = self.user.username if self.user_id else self.session_key or "anonyme"
+        return f"{self.get_channel_display()} - {owner}"
+
+
+class CoachMessage(models.Model):
+    ROLE_CHOICES = [
+        ("user", "Utilisateur"),
+        ("assistant", "Assistant"),
+    ]
+
+    conversation = models.ForeignKey(
+        CoachConversation,
+        on_delete=models.CASCADE,
+        related_name="messages",
+    )
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    content = models.TextField()
+    used_openai = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["created_at", "id"]
+
+    def __str__(self):
+        return f"{self.conversation_id} - {self.role}"
+
+
+class LearnedWord(models.Model):
+    conversation = models.ForeignKey(
+        CoachConversation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="learned_words",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="learned_words",
+    )
+    session_key = models.CharField(max_length=80, blank=True, db_index=True)
+    owner_key = models.CharField(max_length=80, db_index=True)
+    language = models.ForeignKey(
+        Language,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="learned_words",
+    )
+    language_label = models.CharField(max_length=120, blank=True)
+    word = models.CharField(max_length=120)
+    normalized_word = models.CharField(max_length=120, db_index=True)
+    meaning = models.CharField(max_length=255, blank=True)
+    example = models.TextField(blank=True)
+    pronunciation_hint = models.CharField(max_length=255, blank=True)
+    times_seen = models.PositiveIntegerField(default=0)
+    times_practiced = models.PositiveIntegerField(default=0)
+    times_correct = models.PositiveIntegerField(default=0)
+    mastery_level = models.PositiveIntegerField(default=0)
+    last_practiced_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-mastery_level", "-times_seen", "word"]
+        unique_together = ("owner_key", "normalized_word", "language_label")
+
+    def __str__(self):
+        return f"{self.word} ({self.language_label or 'Sans langue'})"
+
+    @property
+    def success_rate(self):
+        if not self.times_practiced:
+            return 0
+        return round((self.times_correct / self.times_practiced) * 100)
+
+
+class PronunciationAttempt(models.Model):
+    learned_word = models.ForeignKey(
+        LearnedWord,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pronunciation_attempts",
+    )
+    conversation = models.ForeignKey(
+        CoachConversation,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pronunciation_attempts",
+    )
+    expected_word = models.CharField(max_length=120)
+    transcript = models.CharField(max_length=255, blank=True)
+    score = models.PositiveIntegerField(default=0)
+    feedback = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.expected_word} - {self.score}"

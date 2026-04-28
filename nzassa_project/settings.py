@@ -2,6 +2,29 @@ import os
 from pathlib import Path
 
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+
+def load_env_file():
+    env_path = BASE_DIR / ".env"
+    if not env_path.exists():
+        return
+
+    for raw_line in env_path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = value.strip()
+        if value and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        os.environ.setdefault(key, value)
+
+
+load_env_file()
+
+
 def env_bool(name, default=False):
     value = os.environ.get(name)
     if value is None:
@@ -14,10 +37,6 @@ def env_list(name, default):
     if not value:
         return default
     return [item.strip() for item in value.split(",") if item.strip()]
-
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",

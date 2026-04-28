@@ -8,13 +8,21 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.views import LoginView
 from django.db.models import Avg, Count, Sum
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
 from django.views.decorators.http import require_GET, require_POST
-from django.http import HttpResponse
 
+from .ai_services import (
+    build_discovered_vocabulary as ai_build_discovered_vocabulary,
+    build_pronunciation_cards as ai_build_pronunciation_cards,
+    chat_with_coach,
+    evaluate_pronunciation,
+    get_memory_queryset,
+    get_or_create_conversation,
+    get_remote_ai_status,
+)
 from .forms import NzassaLoginForm, NzassaRegistrationForm
 from .models import (
     Badge,
@@ -443,7 +451,7 @@ def build_landing_ai_response(message, request, selected_language=None):
 def build_ai_guidance(prompt, selected_language=None):
     prompt = (prompt or "").strip()
     prompt_lower = prompt.lower()
-    discovered_vocabulary = build_discovered_vocabulary(limit=10)
+    discovered_vocabulary = ai_build_discovered_vocabulary(limit=10)
 
     if not prompt:
         return {
@@ -458,7 +466,7 @@ def build_ai_guidance(prompt, selected_language=None):
             "matches": [],
             "related_courses": list(Course.objects.filter(is_published=True).select_related("language")[:3]),
             "discovered_vocabulary": discovered_vocabulary,
-            "pronunciation_cards": build_pronunciation_cards(prompt, [], discovered_vocabulary, selected_language),
+            "pronunciation_cards": ai_build_pronunciation_cards(prompt, [], discovered_vocabulary, selected_language),
             "practice_loop": [
                 "Ecoute le mot une fois.",
                 "Repete-le lentement.",
@@ -533,7 +541,7 @@ def build_ai_guidance(prompt, selected_language=None):
         headline = "Suggestion de depart"
         summary = "La memoire locale de l'IA grandit avec les contenus de la plateforme."
 
-    pronunciation_cards = build_pronunciation_cards(
+    pronunciation_cards = ai_build_pronunciation_cards(
         prompt,
         translations,
         discovered_matches or discovered_vocabulary,
@@ -568,7 +576,7 @@ def build_ai_guidance(prompt, selected_language=None):
 def accueil(request):
     featured_courses = Course.objects.filter(is_published=True)[:3]
     featured_experiences = CulturalExperience.objects.all()[:3]
-    discovered_vocabulary = build_discovered_vocabulary(limit=8)
+    discovered_vocabulary = ai_build_discovered_vocabulary(limit=8)
     landing_games = build_landing_game_pack()
     cultural_highlights = build_cultural_highlights()
     translation_examples = get_translation_examples()
@@ -787,6 +795,11 @@ def ai_coach(request):
 
     prompt = request.GET.get("prompt", "")
     guidance = build_ai_guidance(prompt, selected_language=selected_language)
+    conversation = get_or_create_conversation(request, selected_language=selected_language, channel="coach")
+    recent_messages = list(conversation.messages.order_by("-created_at")[:12])
+    recent_messages.reverse()
+    learned_words = list(get_memory_queryset(conversation)[:8])
+    remote_ai_status = get_remote_ai_status()
 
     return render(
         request,
@@ -797,6 +810,10 @@ def ai_coach(request):
             "profile": profile,
             "selected_language": selected_language,
             "featured_courses": Course.objects.filter(is_published=True).select_related("language")[:4],
+            "conversation": conversation,
+            "conversation_messages": recent_messages,
+            "learned_words": learned_words,
+            "remote_ai_status": remote_ai_status,
         },
     )
 
@@ -870,7 +887,62 @@ def landing_ai_chat(request):
     if request.user.is_authenticated:
         selected_language = get_or_create_profile(request.user).selected_language
 
-    response = build_landing_ai_response(message, request, selected_language=selected_language)
+    conversation = get_or_create_conversation(request, selected_language=selected_language, channel="landing")
+    response = chat_with_coach(conversation, message, selected_language=selected_language)
+    if response.get("error"):
+        return JsonResponse({"error": response["error"]}, status=response.get("status", 400))
+    return JsonResponse(
+        {
+            "text": response["reply"],
+            "language": response["language"],
+            "voice": response["voice"],
+            "suggestions": response["suggestions"],
+            "source": response["source"],
+            "pronunciation_cards": response["pronunciation_cards"],
+        }
+    )
+
+
+@require_POST
+def coach_ai_chat(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Payload JSON invalide."}, status=400)
+
+    selected_language = None
+    if request.user.is_authenticated:
+        selected_language = get_or_create_profile(request.user).selected_language
+
+    conversation = get_or_create_conversation(request, selected_language=selected_language, channel="coach")
+    response = chat_with_coach(conversation, payload.get("message", ""), selected_language=selected_language)
+    if response.get("error"):
+        return JsonResponse({"error": response["error"]}, status=response.get("status", 400))
+    return JsonResponse(response)
+
+
+@require_POST
+def coach_pronunciation_feedback(request):
+    try:
+        payload = json.loads(request.body.decode("utf-8"))
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"error": "Payload JSON invalide."}, status=400)
+
+    selected_language = None
+    if request.user.is_authenticated:
+        selected_language = get_or_create_profile(request.user).selected_language
+
+    conversation = get_or_create_conversation(request, selected_language=selected_language, channel="coach")
+    response = evaluate_pronunciation(
+        conversation,
+        payload.get("word", ""),
+        payload.get("transcript", ""),
+        language_label=payload.get("language", ""),
+        meaning=payload.get("meaning", ""),
+        selected_language=selected_language,
+    )
+    if response.get("error"):
+        return JsonResponse({"error": response["error"]}, status=response.get("status", 400))
     return JsonResponse(response)
 
 
@@ -884,6 +956,4 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Vous etes maintenant deconnecte en toute securite.")
     return redirect("accueil")
-
-
 

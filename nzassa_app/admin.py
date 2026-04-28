@@ -2,13 +2,17 @@ from django.contrib import admin
 
 from .models import (
     Badge,
+    CoachConversation,
+    CoachMessage,
     Course,
     CulturalExperience,
     Enrollment,
     Language,
     Lesson,
+    LearnedWord,
     LessonProgress,
     Module,
+    PronunciationAttempt,
     QuizAttempt,
     QuizQuestion,
     Traduction,
@@ -105,3 +109,30 @@ class CulturalExperienceAdmin(admin.ModelAdmin):
     list_filter = ("experience_type", "is_premium")
     search_fields = ("title", "description")
     prepopulated_fields = {"slug": ("title",)}
+
+
+@admin.register(CoachConversation)
+class CoachConversationAdmin(admin.ModelAdmin):
+    list_display = ("id", "channel", "user", "selected_language", "updated_at")
+    list_filter = ("channel", "selected_language")
+    search_fields = ("user__username", "session_key", "title")
+
+
+@admin.register(CoachMessage)
+class CoachMessageAdmin(admin.ModelAdmin):
+    list_display = ("conversation", "role", "used_openai", "created_at")
+    list_filter = ("role", "used_openai")
+    search_fields = ("content",)
+
+
+@admin.register(LearnedWord)
+class LearnedWordAdmin(admin.ModelAdmin):
+    list_display = ("word", "language_label", "user", "mastery_level", "times_practiced", "times_correct")
+    list_filter = ("language_label",)
+    search_fields = ("word", "meaning", "example", "user__username", "session_key")
+
+
+@admin.register(PronunciationAttempt)
+class PronunciationAttemptAdmin(admin.ModelAdmin):
+    list_display = ("expected_word", "score", "conversation", "created_at")
+    search_fields = ("expected_word", "transcript", "feedback")

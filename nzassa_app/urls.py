@@ -4,6 +4,8 @@ from .views import (
     NzassaLoginView,
     accueil,
     ai_coach,
+    coach_ai_chat,
+    coach_pronunciation_feedback,
     course_catalog,
     course_detail,
     dashboard,
@@ -21,6 +23,8 @@ from .views import (
 urlpatterns = [
     path("", accueil, name="accueil"),
     path("coach-ia/", ai_coach, name="ai_coach"),
+    path("api/coach-ia/chat/", coach_ai_chat, name="coach_ai_chat"),
+    path("api/coach-ia/prononciation/", coach_pronunciation_feedback, name="coach_pronunciation_feedback"),
     path("parcours/", course_catalog, name="course_catalog"),
     path("parcours/<slug:slug>/", course_detail, name="course_detail"),
     path("parcours/<slug:slug>/inscription/", enroll_course, name="enroll_course"),

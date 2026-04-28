@@ -1,8 +1,12 @@
+import json
+from unittest.mock import patch
+
 from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Course, Language, Lesson, Module, QuizQuestion, UserProfile
+from .ai_services import get_remote_ai_status
+from .models import Course, Language, LearnedWord, Lesson, Module, QuizQuestion, Traduction, UserProfile
 
 
 class NzassaFlowTests(TestCase):
@@ -34,6 +38,11 @@ class NzassaFlowTests(TestCase):
             choice_d="Kouassi",
             correct_choice="A",
             explanation="Akwaba est une formule d'accueil.",
+        )
+        self.translation = Traduction.objects.create(
+            mot_origine="bonjour",
+            langue_cible="BAO",
+            resultat_traduction="Akwaba",
         )
 
     def test_register_creates_profile_and_redirects(self):
@@ -104,4 +113,93 @@ class NzassaFlowTests(TestCase):
         )
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response["Content-Type"], "application/json")
-        self.assertIn("Bonjour", response.json()["text"])
+        self.assertIn("Akwaba", response.json()["text"])
+
+    def test_coach_ai_chat_returns_memory_and_cards(self):
+        response = self.client.post(
+            reverse("coach_ai_chat"),
+            data='{"message":"Apprends-moi bonjour en baoule"}',
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("reply", payload)
+        self.assertTrue(payload["pronunciation_cards"])
+        self.assertTrue(payload["learned_words"])
+        self.assertTrue(LearnedWord.objects.exists())
+
+    def test_pronunciation_feedback_updates_progress(self):
+        self.client.post(
+            reverse("coach_ai_chat"),
+            data='{"message":"bonjour"}',
+            content_type="application/json",
+        )
+        response = self.client.post(
+            reverse("coach_pronunciation_feedback"),
+            data=json.dumps(
+                {
+                    "word": "Akwaba",
+                    "transcript": "Akwaba",
+                    "language": "Baoule",
+                    "meaning": "bonjour",
+                }
+            ),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertGreaterEqual(payload["score"], 90)
+        self.assertGreaterEqual(payload["mastery_level"], 20)
+        self.assertEqual(payload["times_practiced"], 1)
+
+    def test_remote_ai_status_prefers_openrouter_free_when_available(self):
+        with patch("nzassa_app.ai_services.ollama_is_available", return_value=False):
+            with patch.dict(
+                "os.environ",
+                {
+                    "NZASSA_AI_PROVIDER": "auto",
+                    "OPENROUTER_API_KEY": "test-openrouter",
+                    "HF_TOKEN": "",
+                    "OPENAI_API_KEY": "",
+                },
+                clear=False,
+            ):
+                status = get_remote_ai_status()
+
+        self.assertTrue(status["enabled"])
+        self.assertEqual(status["provider"], "openrouter")
+
+    def test_remote_ai_status_falls_back_to_local_without_keys(self):
+        with patch("nzassa_app.ai_services.ollama_is_available", return_value=False):
+            with patch.dict(
+                "os.environ",
+                {
+                    "NZASSA_AI_PROVIDER": "auto",
+                    "OPENROUTER_API_KEY": "",
+                    "HF_TOKEN": "",
+                    "OPENAI_API_KEY": "",
+                },
+                clear=False,
+            ):
+                status = get_remote_ai_status()
+
+        self.assertFalse(status["enabled"])
+        self.assertEqual(status["provider"], "local")
+
+    def test_remote_ai_status_prefers_ollama_when_available(self):
+        with patch("nzassa_app.ai_services.ollama_is_available", return_value=True):
+            with patch.dict(
+                "os.environ",
+                {
+                    "NZASSA_AI_PROVIDER": "auto",
+                    "OPENROUTER_API_KEY": "",
+                    "HF_TOKEN": "",
+                    "OPENAI_API_KEY": "",
+                    "OLLAMA_MODEL": "qwen3:4b",
+                },
+                clear=False,
+            ):
+                status = get_remote_ai_status()
+
+        self.assertTrue(status["enabled"])
+        self.assertEqual(status["provider"], "ollama")
