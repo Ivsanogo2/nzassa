@@ -25,6 +25,18 @@
     .action-btn { border: none; border-radius: 999px; padding: 12px 16px; cursor: pointer; font-weight: 700; }
     .action-btn.primary { background: linear-gradient(135deg, var(--clay), var(--gold)); color: white; }
     .action-btn.secondary { background: rgba(13, 59, 102, 0.08); color: var(--lagoon); }
+    .challenge-grid { display: grid; gap: 10px; margin-top: 14px; }
+    .challenge-choice {
+        border: 1px solid rgba(20, 33, 29, 0.1);
+        border-radius: 16px;
+        padding: 12px 14px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.82);
+        text-align: left;
+        font-weight: 800;
+    }
+    .challenge-choice.correct { background: rgba(31, 107, 79, 0.14); border-color: rgba(31, 107, 79, 0.35); }
+    .challenge-choice.wrong { background: rgba(196, 90, 45, 0.12); border-color: rgba(196, 90, 45, 0.36); }
     .mobile-note { color: rgba(16, 24, 23, 0.74); line-height: 1.7; }
     @media (max-width: 980px) {
         .vr-hero, .vr-layout, .preset-grid { grid-template-columns: 1fr; }
@@ -143,6 +155,13 @@
             </div>
 
             <div class="vr-card surface-card">
+                <h3 style="margin-top:0;">Defi du guide</h3>
+                <p id="challenge-question" style="line-height:1.7;margin-bottom:0;">Clique d'abord sur un objet, puis reponds au defi.</p>
+                <div id="challenge-choices" class="challenge-grid"></div>
+                <p id="challenge-feedback" style="line-height:1.7;margin-bottom:0;color:var(--forest);font-weight:700;"></p>
+            </div>
+
+            <div class="vr-card surface-card">
                 <h3 style="margin-top:0;">Parcours recommande</h3>
                 <ul id="journey-list" class="journey-list">
                     <li data-key="case">Trouver la case</li>
@@ -169,8 +188,11 @@
 
 <script>
     const journeyState = new Set();
+    const solvedChallenges = new Set();
     const learnedWords = [];
     const totalStops = 5;
+    let challengeScore = 0;
+    let activeChallengeKey = "case";
     const scenes = JSON.parse(document.getElementById("vr-scenes").textContent);
 
     const overlayMessage = document.getElementById("overlay-message");
@@ -188,6 +210,47 @@
     const wallLeft = document.getElementById("wall-left");
     const wallCenter = document.getElementById("wall-center");
     const wallRight = document.getElementById("wall-right");
+    const challengeQuestion = document.getElementById("challenge-question");
+    const challengeChoices = document.getElementById("challenge-choices");
+    const challengeFeedback = document.getElementById("challenge-feedback");
+
+    const challenges = [
+        {
+            key: "case",
+            question: "Quel mot local designe la case familiale ?",
+            answer: "Sua",
+            choices: ["Sua", "Sugu", "Kple"],
+            feedback: "Sua renvoie ici a la case, lieu d'accueil et de memoire.",
+        },
+        {
+            key: "arbre",
+            question: "Quel mot est associe a l'arbre a palabres ?",
+            answer: "Waka",
+            choices: ["Waka", "Bia", "Mo ni"],
+            feedback: "Waka aide a retenir l'arbre, l'ombre et la parole partagee.",
+        },
+        {
+            key: "tabouret",
+            question: "Quel mot correspond au tabouret ?",
+            answer: "Bia",
+            choices: ["Akwaba", "Bia", "Sugu"],
+            feedback: "Bia est le mot travaille pour le tabouret.",
+        },
+        {
+            key: "tambour",
+            question: "Quel mot retiens-tu pour le tambour ?",
+            answer: "Kple",
+            choices: ["Kple", "Waka", "Sua"],
+            feedback: "Kple est relie au tambour, a la musique et a la ceremonie.",
+        },
+        {
+            key: "marche",
+            question: "Quel mot local est utilise pour le marche ?",
+            answer: "Sugu",
+            choices: ["Bia", "Sugu", "Kple"],
+            feedback: "Sugu est le mot du marche dans cette mission.",
+        },
+    ];
 
     function speak(text) {
         if (!window.speechSynthesis) {
@@ -202,7 +265,7 @@
 
     function updateJourneyUI() {
         foundCount.textContent = journeyState.size;
-        vrScore.textContent = journeyState.size * 20;
+        vrScore.textContent = (journeyState.size * 20) + challengeScore;
         journeyProgress.textContent = `Explorer ${journeyState.size}/${totalStops} points culturels.`;
         vocabCount.textContent = learnedWords.length;
 
@@ -220,9 +283,44 @@
         vocabLog.innerHTML = learnedWords.map((item) => `<strong>${item.local}</strong> = ${item.fr}`).join("<br>");
     }
 
+    function renderChallenge(key) {
+        const challenge = challenges.find((item) => item.key === key) || challenges[0];
+        activeChallengeKey = challenge.key;
+        challengeQuestion.textContent = challenge.question;
+        challengeFeedback.textContent = "";
+        challengeChoices.innerHTML = challenge.choices
+            .map((choice) => `<button type="button" class="challenge-choice" data-choice="${choice}">${choice}</button>`)
+            .join("");
+        challengeChoices.querySelectorAll(".challenge-choice").forEach((button) => {
+            button.addEventListener("click", () => answerChallenge(button, challenge));
+        });
+    }
+
+    function answerChallenge(button, challenge) {
+        const choice = button.dataset.choice;
+        const isCorrect = choice === challenge.answer;
+        challengeChoices.querySelectorAll(".challenge-choice").forEach((item) => {
+            item.classList.remove("correct", "wrong");
+        });
+        button.classList.add(isCorrect ? "correct" : "wrong");
+
+        if (isCorrect) {
+            if (!solvedChallenges.has(challenge.key)) {
+                solvedChallenges.add(challenge.key);
+                challengeScore += 15;
+            }
+            challengeFeedback.textContent = challenge.feedback;
+            speak(challenge.feedback);
+        } else {
+            challengeFeedback.textContent = `Essaie encore. Reecoute l'objet ${activeChallengeKey}.`;
+        }
+        updateJourneyUI();
+    }
+
     function apprendre(key, nomLocal, nomFrancais, histoire) {
         speak(`${nomLocal}. ${histoire}`);
         overlayMessage.innerHTML = `<strong>${nomFrancais}</strong> se dit <strong>${nomLocal}</strong>. ${histoire}`;
+        renderChallenge(key);
 
         if (!journeyState.has(key)) {
             journeyState.add(key);
@@ -254,10 +352,13 @@
 
     function resetJourney() {
         journeyState.clear();
+        solvedChallenges.clear();
         learnedWords.length = 0;
+        challengeScore = 0;
         overlayMessage.textContent = "Choisis une scene puis clique sur les objets pour ecouter le lieu et memoriser le vocabulaire.";
         updateJourneyUI();
         updateVocabLog();
+        renderChallenge("case");
     }
 
     function speakGuide() {
@@ -269,6 +370,7 @@
     });
 
     applyScene(scenes[0].key);
+    renderChallenge("case");
     updateJourneyUI();
 </script>
 {% endblock %}

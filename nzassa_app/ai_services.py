@@ -120,6 +120,30 @@ LANGUAGE_HINTS = {
     "langue des signes": "Observe le geste, puis redis le sens a voix haute pour le fixer.",
 }
 
+INTENT_RULES = [
+    ("vr", ("vr", "realite virtuelle", "immersion", "visite", "village", "marche", "explorer")),
+    ("game", ("jeu", "jeux", "mini-jeu", "mini jeu", "quiz", "defi", "test", "jouer", "question")),
+    ("sign", ("signe", "signes", "langue des signes", "geste", "gestuel", "main")),
+    ("pronunciation", ("prononciation", "prononcer", "corrige", "corriger", "voix", "repete", "repeter", "oral")),
+    ("conversation", ("conversation", "dialogue", "parler", "discute", "scenario", "role")),
+    ("translation", ("traduction", "traduire", "comment dit", "signifie", "sens", "dire")),
+    ("culture", ("culture", "tradition", "rite", "histoire", "patrimoine", "tambour", "case", "arbre")),
+    ("course", ("parcours", "cours", "lecon", "programme", "niveau", "apprendre")),
+    ("plan", ("plan", "routine", "objectif", "progres", "revision", "reviser")),
+]
+
+INTENT_LABELS = {
+    "course": "parcours",
+    "culture": "culture",
+    "conversation": "conversation",
+    "game": "jeu",
+    "plan": "plan",
+    "pronunciation": "prononciation",
+    "sign": "signes",
+    "translation": "traduction",
+    "vr": "VR",
+}
+
 
 def get_requested_ai_provider():
     return (os.environ.get("NZASSA_AI_PROVIDER", NZASSA_AI_PROVIDER) or "auto").strip().lower()
@@ -220,6 +244,38 @@ def extract_words(text):
             continue
         words.append(word)
     return words
+
+
+def dedupe_preserve_order(items, limit=None):
+    deduped = []
+    for item in items:
+        if item is None:
+            continue
+        text = str(item).strip()
+        if not text or text in deduped:
+            continue
+        deduped.append(text)
+        if limit and len(deduped) >= limit:
+            break
+    return deduped
+
+
+def detect_intents(message):
+    lookup = normalize_lookup_text(message)
+    detected = []
+
+    for intent, patterns in INTENT_RULES:
+        if any(pattern in lookup for pattern in patterns):
+            detected.append(intent)
+
+    if not detected and lookup:
+        detected.append("course")
+
+    return detected[:5]
+
+
+def describe_intents(intents):
+    return [INTENT_LABELS.get(intent, intent) for intent in intents or []]
 
 
 def build_owner_key(user=None, session_key=""):
@@ -544,8 +600,195 @@ def gather_knowledge(prompt, selected_language=None):
     }
 
 
-def build_follow_up_suggestions(knowledge, learned_words, selected_language=None):
+def pick_activity_seed(message, knowledge, memory_words, selected_language=None):
+    translations = knowledge.get("translations", [])
+    discovered = knowledge.get("discovered_matches") or knowledge.get("discovered", [])
+
+    if translations:
+        first = translations[0]
+        return {
+            "word": first.resultat_traduction,
+            "origin": first.mot_origine,
+            "language": first.get_langue_cible_display(),
+            "voice": get_voice(first.langue_cible, first.get_langue_cible_display(), selected_language),
+        }
+
+    if memory_words:
+        first = memory_words[0]
+        return {
+            "word": first.word,
+            "origin": first.meaning or "mot deja memorise",
+            "language": first.language_label or (first.language.name if first.language_id else "Francais"),
+            "voice": get_voice(language_label=first.language_label, selected_language=selected_language),
+        }
+
+    if discovered:
+        first = discovered[0]
+        return {
+            "word": first["word"].title(),
+            "origin": first["hint"],
+            "language": first["language"],
+            "voice": get_voice(first.get("language_code", ""), first["language"], selected_language),
+        }
+
+    clean_message = (message or "").strip() or "Nzassa"
+    return {
+        "word": clean_message[:80],
+        "origin": "demande de l'apprenant",
+        "language": selected_language.name if selected_language else "Francais",
+        "voice": get_voice(selected_language=selected_language),
+    }
+
+
+def build_quiz_choices(seed, knowledge, memory_words):
+    distractors = []
+    for traduction in knowledge.get("translations", [])[1:]:
+        distractors.append(traduction.resultat_traduction)
+    for item in knowledge.get("discovered", []):
+        distractors.append(item["word"].title())
+    for word in memory_words:
+        distractors.append(word.word)
+    distractors.extend(["Akwaba", "I ni sogoma", "Mo ni", "Sugu", "Waka", "Bia"])
+    return dedupe_preserve_order([seed["word"], *distractors], limit=4)
+
+
+def build_learning_activity(message, knowledge, memory_words=None, selected_language=None, detected_intents=None):
+    memory_words = memory_words or []
+    detected_intents = detected_intents or detect_intents(message)
+    seed = pick_activity_seed(message, knowledge, memory_words, selected_language=selected_language)
+    language = seed["language"] or (selected_language.name if selected_language else "Francais")
+
+    if "vr" in detected_intents:
+        return {
+            "type": "vr_mission",
+            "title": "Mission VR guidee",
+            "subtitle": "Explorer un lieu, toucher les objets, memoriser le vocabulaire.",
+            "prompt": f"Trouve dans la scene un objet lie a '{seed['origin']}' puis repete le mot '{seed['word']}'.",
+            "steps": [
+                "Ouvre l'immersion VR.",
+                "Choisis une scene: village, marche ou patrimoine.",
+                "Clique sur 3 objets culturels et ecoute le guide.",
+                f"Reviens au coach et dis: j'ai appris {seed['word']}.",
+            ],
+            "action_label": "Ouvrir la VR",
+            "action_url": "/immersion/",
+            "command": f"Prepare une mission VR avec {seed['word']}",
+            "xp": 80,
+            "language": language,
+            "voice": seed["voice"],
+        }
+
+    if "sign" in detected_intents:
+        return {
+            "type": "sign_lab",
+            "title": "Atelier signes intelligent",
+            "subtitle": "Observer, reproduire, puis expliquer le geste.",
+            "prompt": f"Associe le sens '{seed['origin']}' a un geste clair et demande une correction.",
+            "steps": [
+                "Ouvre le laboratoire des signes.",
+                "Observe le geste de demonstration.",
+                "Refais le mouvement lentement devant la camera.",
+                "Demande au coach une phrase simple avec ce signe.",
+            ],
+            "action_label": "Tester les signes",
+            "action_url": "/ia-signes/",
+            "command": f"Aide-moi a apprendre le signe pour {seed['origin']}",
+            "xp": 70,
+            "language": "Langue des signes",
+            "voice": "fr-FR",
+        }
+
+    if "game" in detected_intents:
+        return {
+            "type": "quiz",
+            "title": "Mini-jeu genere par le coach",
+            "subtitle": "Un quiz court pour verifier que le mot est compris.",
+            "question": f"Quelle reponse correspond a '{seed['origin']}' ?",
+            "answer": seed["word"],
+            "choices": build_quiz_choices(seed, knowledge, memory_words),
+            "feedback_ok": f"Exact. {seed['word']} est la bonne reponse.",
+            "feedback_ko": f"Indice: cherche le mot relie a {seed['origin']}.",
+            "command": f"Fais-moi un autre mini-jeu avec {seed['word']}",
+            "xp": 40,
+            "language": language,
+            "voice": seed["voice"],
+        }
+
+    if "pronunciation" in detected_intents:
+        return {
+            "type": "pronunciation",
+            "title": "Defi de prononciation",
+            "subtitle": "Ecoute, repete, puis recois un score oral.",
+            "word": seed["word"],
+            "prompt": f"Prononce '{seed['word']}' lentement, puis utilise-le dans une phrase.",
+            "steps": [
+                "Ecoute le modele une fois.",
+                "Repete le mot trois fois.",
+                "Lance le test oral dans le laboratoire.",
+            ],
+            "command": f"Corrige ma prononciation de {seed['word']}",
+            "xp": 45,
+            "language": language,
+            "voice": seed["voice"],
+        }
+
+    if "conversation" in detected_intents:
+        return {
+            "type": "dialogue",
+            "title": "Dialogue guide",
+            "subtitle": "Une mini-conversation que le coach peut continuer.",
+            "prompt": f"Utilise '{seed['word']}' dans un echange naturel.",
+            "turns": [
+                {"role": "coach", "text": f"Bonjour. Essaie de placer {seed['word']} dans ta reponse."},
+                {"role": "learner", "text": "Je reponds avec une phrase courte."},
+                {"role": "coach", "text": "Je corrige le sens, le rythme et la prononciation."},
+            ],
+            "command": f"Continue le dialogue avec {seed['word']}",
+            "xp": 50,
+            "language": language,
+            "voice": seed["voice"],
+        }
+
+    if "plan" in detected_intents or "course" in detected_intents:
+        course_title = knowledge["courses"][0].title if knowledge.get("courses") else "Parcours Nzassa"
+        return {
+            "type": "learning_plan",
+            "title": "Plan d'apprentissage adapte",
+            "subtitle": f"Base conseillee: {course_title}.",
+            "prompt": f"Objectif: retenir '{seed['word']}' et le reutiliser sans regarder.",
+            "steps": [
+                "Jour 1: comprendre le sens et ecouter la prononciation.",
+                "Jour 2: faire un mini-jeu et une phrase personnelle.",
+                "Jour 3: refaire le test oral puis ouvrir un parcours lie.",
+            ],
+            "command": f"Construis mon plan de revision pour {seed['word']}",
+            "xp": 60,
+            "language": language,
+            "voice": seed["voice"],
+        }
+
+    return {
+        "type": "practice",
+        "title": "Pratique rapide",
+        "subtitle": "Sens, oral et memoire en une seule boucle.",
+        "prompt": f"Travaille '{seed['word']}' avec sens, prononciation et phrase simple.",
+        "steps": [
+            "Lis le sens.",
+            "Ecoute et repete.",
+            "Ecris une phrase avec le mot.",
+        ],
+        "command": f"Aide-moi a pratiquer {seed['word']}",
+        "xp": 30,
+        "language": language,
+        "voice": seed["voice"],
+    }
+
+
+def build_follow_up_suggestions(knowledge, learned_words, selected_language=None, detected_intents=None, learning_activity=None):
     suggestions = []
+
+    if learning_activity and learning_activity.get("command"):
+        suggestions.append(learning_activity["command"])
 
     if knowledge["translations"]:
         first = knowledge["translations"][0]
@@ -563,18 +806,27 @@ def build_follow_up_suggestions(knowledge, learned_words, selected_language=None
     if knowledge["lessons"]:
         suggestions.append(f"Exercice sur {knowledge['lessons'][0].title}")
 
+    detected_intents = detected_intents or []
+    if "game" not in detected_intents:
+        suggestions.append("Lance un mini-jeu")
+    if "vr" not in detected_intents:
+        suggestions.append("Prepare une mission VR")
+    if "sign" not in detected_intents:
+        suggestions.append("Exercice en langue des signes")
+
     deduped = []
     for item in suggestions:
         if item not in deduped:
             deduped.append(item)
-    return deduped[:4]
+    return deduped[:5]
 
 
-def build_local_reply(message, knowledge, memory_words, selected_language=None):
+def build_local_reply(message, knowledge, memory_words, selected_language=None, detected_intents=None, learning_activity=None):
     message = (message or "").strip()
     translations = knowledge["translations"]
     lessons = knowledge["lessons"]
     courses = knowledge["courses"]
+    detected_intents = detected_intents or detect_intents(message)
 
     lines = []
 
@@ -584,6 +836,9 @@ def build_local_reply(message, knowledge, memory_words, selected_language=None):
         )
     else:
         lines.append("On va apprendre ce point pas a pas, comme dans une vraie discussion de coach.")
+
+    if detected_intents:
+        lines.append(f"J'ai compris ton intention: {', '.join(describe_intents(detected_intents))}.")
 
     if translations:
         for traduction in translations[:2]:
@@ -620,7 +875,16 @@ def build_local_reply(message, knowledge, memory_words, selected_language=None):
             "Commence par me dire si tu veux le sens, une phrase d'exemple ou un exercice de prononciation."
         )
 
-    lines.append("Dis-moi maintenant: tu veux le sens, la prononciation ou une phrase complete ?")
+    if learning_activity:
+        lines.append(f"Activite proposee: {learning_activity['title']}. {learning_activity.get('prompt', '')}")
+        if learning_activity.get("type") == "vr_mission":
+            lines.append("Tu peux ouvrir l'immersion VR, cliquer sur les objets culturels, puis revenir me dire ce que tu as retenu.")
+        elif learning_activity.get("type") == "quiz":
+            lines.append("Je t'ai aussi prepare un mini-jeu avec une bonne reponse et des choix.")
+        elif learning_activity.get("type") == "sign_lab":
+            lines.append("Tu peux passer par le laboratoire des signes pour travailler le geste et le sens.")
+
+    lines.append("Dis-moi maintenant: tu veux le sens, la prononciation, un jeu ou une mission VR ?")
     return "\n".join(lines)
 
 
@@ -630,6 +894,8 @@ def build_openai_instructions(selected_language=None):
         "Tu es Coach Nzassa, un tuteur conversationnel pour apprendre les langues et cultures africaines. "
         "Tu ne repetes pas mecanquement. Tu raisonnes, tu relies les mots au contexte, tu te souviens des mots deja vus, "
         "et tu aides a mieux prononcer. Reponds en francais simple sauf demande contraire. "
+        "Tu comprends aussi les demandes de mini-jeux, VR, langue des signes, parcours, culture, revision et dialogue. "
+        "Quand une demande correspond a une fonctionnalite Nzassa, explique comment l'utiliser dans la reponse. "
         "N'enseigne pas plus de 3 mots nouveaux a la fois. Pour chaque mot, donne le sens, un conseil de prononciation "
         "et une mini-phrase. Termine toujours par un exercice ou une question. "
         f"La langue preferee actuelle de l'apprenant est: {language_hint}. "
@@ -637,7 +903,7 @@ def build_openai_instructions(selected_language=None):
     )
 
 
-def build_openai_context(message, knowledge, memory_words, selected_language=None):
+def build_openai_context(message, knowledge, memory_words, selected_language=None, detected_intents=None, learning_activity=None):
     translation_lines = [
         f"- {item.mot_origine} -> {item.resultat_traduction} ({item.get_langue_cible_display()})"
         for item in knowledge["translations"][:6]
@@ -654,11 +920,19 @@ def build_openai_context(message, knowledge, memory_words, selected_language=Non
         f"- {item.word} | maitrise: {item.mastery_level}% | succes prononciation: {item.success_rate}%"
         for item in memory_words[:6]
     ]
+    activity_lines = []
+    if learning_activity:
+        activity_lines = [
+            f"- type: {learning_activity.get('type', '')}",
+            f"- titre: {learning_activity.get('title', '')}",
+            f"- consigne: {learning_activity.get('prompt', '')}",
+        ]
 
     return "\n".join(
         [
             "Contexte local Nzassa:",
             f"Langue preferee: {selected_language.name if selected_language else 'non definie'}",
+            f"Intentions detectees: {', '.join(describe_intents(detected_intents or [])) or 'generale'}",
             "Traductions disponibles:",
             "\n".join(translation_lines) if translation_lines else "- aucune correspondance exacte",
             "Lecons reliees:",
@@ -667,6 +941,8 @@ def build_openai_context(message, knowledge, memory_words, selected_language=Non
             "\n".join(course_lines) if course_lines else "- aucun parcours cible",
             "Memoire apprenant:",
             "\n".join(memory_lines) if memory_lines else "- aucun mot memorise pour l'instant",
+            "Activite Nzassa conseillee:",
+            "\n".join(activity_lines) if activity_lines else "- aucune activite ciblee",
             f"Message de l'apprenant: {message}",
         ]
     )
@@ -724,7 +1000,15 @@ def post_json_request(url, body, headers, timeout=45):
         return json.loads(response.read().decode("utf-8"))
 
 
-def build_remote_chat_messages(message, conversation, knowledge, memory_words, selected_language=None):
+def build_remote_chat_messages(
+    message,
+    conversation,
+    knowledge,
+    memory_words,
+    selected_language=None,
+    detected_intents=None,
+    learning_activity=None,
+):
     history = list(conversation.messages.order_by("-created_at")[1:9])
     history.reverse()
 
@@ -741,13 +1025,20 @@ def build_remote_chat_messages(message, conversation, knowledge, memory_words, s
     messages.append(
         {
             "role": "user",
-            "content": build_openai_context(message, knowledge, memory_words, selected_language),
+            "content": build_openai_context(
+                message,
+                knowledge,
+                memory_words,
+                selected_language,
+                detected_intents=detected_intents,
+                learning_activity=learning_activity,
+            ),
         }
     )
     return messages
 
 
-def call_openai_reply(message, conversation, knowledge, memory_words, selected_language=None):
+def call_openai_reply(message, conversation, knowledge, memory_words, selected_language=None, detected_intents=None, learning_activity=None):
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
         return None
@@ -761,6 +1052,8 @@ def call_openai_reply(message, conversation, knowledge, memory_words, selected_l
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         )[1:],
         "reasoning": {"effort": os.environ.get("OPENAI_REASONING_EFFORT", OPENAI_REASONING_EFFORT)},
     }
@@ -795,7 +1088,7 @@ def call_openai_reply(message, conversation, knowledge, memory_words, selected_l
     }
 
 
-def call_openrouter_reply(message, conversation, knowledge, memory_words, selected_language=None):
+def call_openrouter_reply(message, conversation, knowledge, memory_words, selected_language=None, detected_intents=None, learning_activity=None):
     api_key = os.environ.get("OPENROUTER_API_KEY")
     if not api_key:
         return None
@@ -808,6 +1101,8 @@ def call_openrouter_reply(message, conversation, knowledge, memory_words, select
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         ),
         "temperature": 0.35,
         "max_tokens": 700,
@@ -847,7 +1142,7 @@ def call_openrouter_reply(message, conversation, knowledge, memory_words, select
     }
 
 
-def call_ollama_reply(message, conversation, knowledge, memory_words, selected_language=None):
+def call_ollama_reply(message, conversation, knowledge, memory_words, selected_language=None, detected_intents=None, learning_activity=None):
     if not ollama_is_available():
         return None
 
@@ -859,6 +1154,8 @@ def call_ollama_reply(message, conversation, knowledge, memory_words, selected_l
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         ),
         "stream": False,
     }
@@ -893,7 +1190,7 @@ def call_ollama_reply(message, conversation, knowledge, memory_words, selected_l
     }
 
 
-def call_huggingface_reply(message, conversation, knowledge, memory_words, selected_language=None):
+def call_huggingface_reply(message, conversation, knowledge, memory_words, selected_language=None, detected_intents=None, learning_activity=None):
     api_key = os.environ.get("HF_TOKEN")
     if not api_key:
         return None
@@ -906,6 +1203,8 @@ def call_huggingface_reply(message, conversation, knowledge, memory_words, selec
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         ),
         "max_tokens": 700,
         "temperature": 0.35,
@@ -941,7 +1240,7 @@ def call_huggingface_reply(message, conversation, knowledge, memory_words, selec
     }
 
 
-def call_remote_reply(message, conversation, knowledge, memory_words, selected_language=None):
+def call_remote_reply(message, conversation, knowledge, memory_words, selected_language=None, detected_intents=None, learning_activity=None):
     provider = get_remote_ai_provider()
     if provider == "ollama":
         return call_ollama_reply(
@@ -950,6 +1249,8 @@ def call_remote_reply(message, conversation, knowledge, memory_words, selected_l
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         )
     if provider == "openrouter":
         return call_openrouter_reply(
@@ -958,6 +1259,8 @@ def call_remote_reply(message, conversation, knowledge, memory_words, selected_l
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         )
     if provider == "huggingface":
         return call_huggingface_reply(
@@ -966,6 +1269,8 @@ def call_remote_reply(message, conversation, knowledge, memory_words, selected_l
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         )
     if provider == "openai":
         return call_openai_reply(
@@ -974,6 +1279,8 @@ def call_remote_reply(message, conversation, knowledge, memory_words, selected_l
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         )
     return None
 
@@ -1033,6 +1340,14 @@ def chat_with_coach(conversation, message, selected_language=None):
 
     knowledge = gather_knowledge(clean_message, selected_language=selected_language)
     memory_words = list(get_memory_queryset(conversation)[:6])
+    detected_intents = detect_intents(clean_message)
+    learning_activity = build_learning_activity(
+        clean_message,
+        knowledge,
+        memory_words,
+        selected_language=selected_language,
+        detected_intents=detected_intents,
+    )
 
     CoachMessage.objects.create(
         conversation=conversation,
@@ -1047,6 +1362,8 @@ def chat_with_coach(conversation, message, selected_language=None):
         knowledge,
         memory_words,
         selected_language=selected_language,
+        detected_intents=detected_intents,
+        learning_activity=learning_activity,
     )
 
     if remote_reply:
@@ -1060,6 +1377,8 @@ def chat_with_coach(conversation, message, selected_language=None):
             knowledge,
             memory_words,
             selected_language=selected_language,
+            detected_intents=detected_intents,
+            learning_activity=learning_activity,
         )
         used_openai = False
 
@@ -1083,7 +1402,13 @@ def chat_with_coach(conversation, message, selected_language=None):
     )
     sync_learned_words(conversation, cards, selected_language=selected_language)
     refreshed_words = list(get_memory_queryset(conversation)[:8])
-    suggestions = build_follow_up_suggestions(knowledge, refreshed_words, selected_language=selected_language)
+    suggestions = build_follow_up_suggestions(
+        knowledge,
+        refreshed_words,
+        selected_language=selected_language,
+        detected_intents=detected_intents,
+        learning_activity=learning_activity,
+    )
 
     first_language = cards[0]["language"] if cards else "francais"
     speech_language = normalize_lookup_text(first_language)
@@ -1098,6 +1423,9 @@ def chat_with_coach(conversation, message, selected_language=None):
         "provider_model": remote_reply["provider_model"] if remote_reply else "",
         "voice": cards[0]["voice"] if cards else get_voice(selected_language=selected_language),
         "language": speech_language,
+        "detected_intents": detected_intents,
+        "intent_labels": describe_intents(detected_intents),
+        "learning_activity": learning_activity,
         "suggestions": suggestions,
         "pronunciation_cards": cards,
         "learned_words": [serialize_word(word) for word in refreshed_words],

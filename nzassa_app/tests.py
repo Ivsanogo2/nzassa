@@ -83,6 +83,7 @@ class NzassaFlowTests(TestCase):
         response = self.client.get(reverse("ai_coach"), {"prompt": "bonjour"})
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Coach")
+        self.assertContains(response, "IA active")
 
     def test_lesson_submission_updates_progress_and_xp(self):
         user = User.objects.create_user(username="kone", password="NzassaPass123!")
@@ -127,6 +128,32 @@ class NzassaFlowTests(TestCase):
         self.assertTrue(payload["pronunciation_cards"])
         self.assertTrue(payload["learned_words"])
         self.assertTrue(LearnedWord.objects.exists())
+        self.assertIn("learning_activity", payload)
+        self.assertIn("detected_intents", payload)
+
+    def test_coach_ai_chat_builds_game_activity(self):
+        response = self.client.post(
+            reverse("coach_ai_chat"),
+            data='{"message":"Fais-moi un mini-jeu sur bonjour"}',
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("game", payload["detected_intents"])
+        self.assertEqual(payload["learning_activity"]["type"], "quiz")
+        self.assertIn("choices", payload["learning_activity"])
+
+    def test_coach_ai_chat_builds_vr_activity(self):
+        response = self.client.post(
+            reverse("coach_ai_chat"),
+            data='{"message":"Prepare une mission VR au marche"}',
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        payload = response.json()
+        self.assertIn("vr", payload["detected_intents"])
+        self.assertEqual(payload["learning_activity"]["type"], "vr_mission")
+        self.assertEqual(payload["learning_activity"]["action_url"], "/immersion/")
 
     def test_pronunciation_feedback_updates_progress(self):
         self.client.post(

@@ -164,13 +164,43 @@
         color: var(--lagoon);
         font-weight: 800;
     }
+    .smart-activity {
+        display: grid;
+        grid-template-columns: minmax(0, 0.9fr) minmax(280px, 1.1fr);
+        gap: 18px;
+        align-items: start;
+    }
+    .smart-panel {
+        padding: 20px;
+        border-radius: 22px;
+        background: linear-gradient(135deg, rgba(8, 48, 77, 0.08), rgba(241, 178, 74, 0.12));
+        border: 1px solid rgba(16, 24, 23, 0.08);
+    }
+    .smart-choice-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        margin-top: 14px;
+    }
+    .smart-choice {
+        width: 100%;
+        border: 1px solid rgba(16, 24, 23, 0.12);
+        border-radius: 16px;
+        padding: 12px 14px;
+        text-align: left;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.72);
+        font-weight: 800;
+    }
+    .smart-choice.is-correct { border-color: rgba(31, 107, 79, 0.45); background: rgba(31, 107, 79, 0.14); }
+    .smart-choice.is-wrong { border-color: rgba(196, 90, 45, 0.45); background: rgba(196, 90, 45, 0.12); }
     .coach-box ul {
         margin: 14px 0 0;
         padding-left: 18px;
         line-height: 1.8;
     }
     @media (max-width: 1100px) {
-        .coach-hero, .coach-grid, .cards-grid, .course-grid, .vocab-grid, .coach-form {
+        .coach-hero, .coach-grid, .cards-grid, .course-grid, .vocab-grid, .coach-form, .smart-activity, .smart-choice-grid {
             grid-template-columns: 1fr;
         }
     }
@@ -214,6 +244,43 @@
                 Astuce gratuite: installe Ollama pour un vrai modele local sans cle, ou ajoute `OPENROUTER_API_KEY` dans `.env` pour utiliser `openrouter/free`.
             </p>
         </aside>
+    </section>
+
+    <section class="surface-card coach-card">
+        <div class="smart-activity">
+            <div>
+                <p style="margin-top:0;color:var(--forest);font-weight:800;text-transform:uppercase;letter-spacing:0.08em;">IA active</p>
+                <h2 id="smart-activity-title" style="margin-bottom:10px;">{{ guidance.smart_activity.title|default:"Mission intelligente" }}</h2>
+                <p id="smart-activity-subtitle" class="tiny-meta" style="margin-top:0;">{{ guidance.smart_activity.subtitle|default:"Le coach transforme ta demande en action concrete." }}</p>
+                <p id="smart-activity-prompt" style="line-height:1.8;">{{ guidance.smart_activity.prompt|default:"Demande un jeu, une mission VR, un signe, un dialogue ou un plan." }}</p>
+                <div class="action-row">
+                    <button type="button" id="smart-command-btn" class="action-btn" data-command="{{ guidance.smart_activity.command|default:'Lance un mini-jeu' }}">Lancer avec le coach</button>
+                    <a id="smart-action-link" class="action-btn secondary-btn" href="{{ guidance.smart_activity.action_url|default:'#' }}" {% if not guidance.smart_activity.action_url %}style="display:none;"{% endif %}>
+                        {{ guidance.smart_activity.action_label|default:"Ouvrir" }}
+                    </a>
+                </div>
+            </div>
+            <div id="smart-activity-body" class="smart-panel">
+                {% if guidance.smart_activity.type == "quiz" %}
+                    <strong>{{ guidance.smart_activity.question }}</strong>
+                    <div class="smart-choice-grid">
+                        {% for choice in guidance.smart_activity.choices %}
+                            <button type="button" class="smart-choice js-smart-choice" data-choice="{{ choice }}">{{ choice }}</button>
+                        {% endfor %}
+                    </div>
+                    <p id="smart-activity-feedback" class="tiny-meta" style="margin-bottom:0;">Choisis une reponse pour gagner le defi.</p>
+                {% else %}
+                    <strong>Etapes proposees</strong>
+                    <ul id="smart-activity-steps" style="line-height:1.8;margin-bottom:0;">
+                        {% for step in guidance.smart_activity.steps %}
+                            <li>{{ step }}</li>
+                        {% empty %}
+                            <li>Pose une question au coach pour recevoir une mission.</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
     </section>
 
     <section class="coach-grid">
@@ -371,6 +438,7 @@
 </div>
 
 {{ guidance.pronunciation_cards|json_script:"coach-pronunciations" }}
+{{ guidance.smart_activity|json_script:"coach-smart-activity" }}
 {% endblock %}
 
 {% block extra_scripts %}
@@ -402,15 +470,26 @@
     const listenActiveWordBtn = document.getElementById("listen-active-word");
     const recordActiveWordBtn = document.getElementById("record-active-word");
     const coachMicBtn = document.getElementById("coach-mic-btn");
+    const smartActivityTitle = document.getElementById("smart-activity-title");
+    const smartActivitySubtitle = document.getElementById("smart-activity-subtitle");
+    const smartActivityPrompt = document.getElementById("smart-activity-prompt");
+    const smartActivityBody = document.getElementById("smart-activity-body");
+    const smartCommandBtn = document.getElementById("smart-command-btn");
+    const smartActionLink = document.getElementById("smart-action-link");
 
     let pronunciationCards = JSON.parse(document.getElementById("coach-pronunciations").textContent || "[]");
+    let currentSmartActivity = JSON.parse(document.getElementById("coach-smart-activity").textContent || "{}");
     let activeCardIndex = 0;
 
     function escapeHtml(text) {
-        return (text || "")
+        return String(text || "")
             .replaceAll("&", "&amp;")
             .replaceAll("<", "&lt;")
             .replaceAll(">", "&gt;");
+    }
+
+    function escapeAttribute(text) {
+        return escapeHtml(text).replaceAll('"', "&quot;").replaceAll("'", "&#039;");
     }
 
     function speakText(text, voice) {
@@ -441,6 +520,73 @@
             .map((suggestion) => `<button type="button" class="suggestion-chip js-suggestion-chip" data-prompt="${escapeHtml(suggestion)}">${escapeHtml(suggestion)}</button>`)
             .join("");
         bindSuggestionChips();
+    }
+
+    function bindSmartQuizChoices(activity) {
+        smartActivityBody.querySelectorAll(".js-smart-choice").forEach((button) => {
+            button.addEventListener("click", () => {
+                const choice = button.dataset.choice || "";
+                const isCorrect = choice === activity.answer;
+                smartActivityBody.querySelectorAll(".js-smart-choice").forEach((item) => {
+                    item.classList.remove("is-correct", "is-wrong");
+                });
+                button.classList.add(isCorrect ? "is-correct" : "is-wrong");
+                const feedback = document.getElementById("smart-activity-feedback");
+                if (feedback) {
+                    feedback.textContent = isCorrect ? activity.feedback_ok : activity.feedback_ko;
+                }
+                speakText(isCorrect ? activity.feedback_ok : activity.feedback_ko, activity.voice || "fr-FR");
+            });
+        });
+    }
+
+    function renderSmartActivity(activity) {
+        currentSmartActivity = activity || {};
+        smartActivityTitle.textContent = currentSmartActivity.title || "Mission intelligente";
+        smartActivitySubtitle.textContent = currentSmartActivity.subtitle || "Le coach transforme ta demande en action concrete.";
+        smartActivityPrompt.textContent = currentSmartActivity.prompt || currentSmartActivity.question || "Demande un jeu, une mission VR, un signe, un dialogue ou un plan.";
+
+        smartCommandBtn.dataset.command = currentSmartActivity.command || currentSmartActivity.prompt || "";
+        smartCommandBtn.style.display = smartCommandBtn.dataset.command ? "inline-flex" : "none";
+
+        if (currentSmartActivity.action_url) {
+            smartActionLink.href = currentSmartActivity.action_url;
+            smartActionLink.textContent = currentSmartActivity.action_label || "Ouvrir";
+            smartActionLink.style.display = "inline-flex";
+        } else {
+            smartActionLink.style.display = "none";
+        }
+
+        if (currentSmartActivity.type === "quiz") {
+            const choices = currentSmartActivity.choices || [];
+            smartActivityBody.innerHTML = `
+                <strong>${escapeHtml(currentSmartActivity.question || "Choisis la bonne reponse")}</strong>
+                <div class="smart-choice-grid">
+                    ${choices.map((choice) => `<button type="button" class="smart-choice js-smart-choice" data-choice="${escapeAttribute(choice)}">${escapeHtml(choice)}</button>`).join("")}
+                </div>
+                <p id="smart-activity-feedback" class="tiny-meta" style="margin-bottom:0;">Choisis une reponse pour gagner le defi.</p>
+            `;
+            bindSmartQuizChoices(currentSmartActivity);
+            return;
+        }
+
+        if (currentSmartActivity.turns && currentSmartActivity.turns.length) {
+            smartActivityBody.innerHTML = `
+                <strong>Dialogue propose</strong>
+                <ul style="line-height:1.8;margin-bottom:0;">
+                    ${currentSmartActivity.turns.map((turn) => `<li><strong>${escapeHtml(turn.role)}:</strong> ${escapeHtml(turn.text)}</li>`).join("")}
+                </ul>
+            `;
+            return;
+        }
+
+        const steps = currentSmartActivity.steps || ["Pose une question au coach pour recevoir une mission."];
+        smartActivityBody.innerHTML = `
+            <strong>Etapes proposees</strong>
+            <ul style="line-height:1.8;margin-bottom:0;">
+                ${steps.map((step) => `<li>${escapeHtml(step)}</li>`).join("")}
+            </ul>
+        `;
     }
 
     function renderLearnedWords(words) {
@@ -566,6 +712,7 @@
             renderSuggestionChips(payload.suggestions || []);
             renderLearnedWords(payload.learned_words || []);
             renderPronunciationCards(payload.pronunciation_cards || []);
+            renderSmartActivity(payload.learning_activity || {});
             pronunciationScore.textContent = "Score: --";
             pronunciationLevel.textContent = "Maitrise: --";
         } catch (error) {
@@ -682,6 +829,15 @@
     });
 
     coachMicBtn.addEventListener("click", startChatVoiceInput);
+    smartCommandBtn.addEventListener("click", () => {
+        const command = smartCommandBtn.dataset.command || "";
+        if (!command) {
+            return;
+        }
+        userInput.value = command;
+        sendMessage(command);
+        userInput.value = "";
+    });
     listenActiveWordBtn.addEventListener("click", () => {
         const card = pronunciationCards[activeCardIndex];
         if (!card) {
@@ -694,6 +850,7 @@
 
     bindSuggestionChips();
     bindCardActions();
+    renderSmartActivity(currentSmartActivity);
     setActiveCard(0);
     chatLog.scrollTop = chatLog.scrollHeight;
 </script>

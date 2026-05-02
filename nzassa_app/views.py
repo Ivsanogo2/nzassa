@@ -16,9 +16,12 @@ from django.views.decorators.http import require_GET, require_POST
 
 from .ai_services import (
     build_discovered_vocabulary as ai_build_discovered_vocabulary,
+    build_learning_activity as ai_build_learning_activity,
     build_pronunciation_cards as ai_build_pronunciation_cards,
     chat_with_coach,
+    detect_intents as ai_detect_intents,
     evaluate_pronunciation,
+    gather_knowledge as ai_gather_knowledge,
     get_memory_queryset,
     get_or_create_conversation,
     get_remote_ai_status,
@@ -452,6 +455,16 @@ def build_ai_guidance(prompt, selected_language=None):
     prompt = (prompt or "").strip()
     prompt_lower = prompt.lower()
     discovered_vocabulary = ai_build_discovered_vocabulary(limit=10)
+    activity_prompt = prompt or "Apprendre le baoule avec prononciation"
+    service_knowledge = ai_gather_knowledge(activity_prompt, selected_language=selected_language)
+    detected_intents = ai_detect_intents(activity_prompt)
+    smart_activity = ai_build_learning_activity(
+        activity_prompt,
+        service_knowledge,
+        [],
+        selected_language=selected_language,
+        detected_intents=detected_intents,
+    )
 
     if not prompt:
         return {
@@ -467,6 +480,8 @@ def build_ai_guidance(prompt, selected_language=None):
             "related_courses": list(Course.objects.filter(is_published=True).select_related("language")[:3]),
             "discovered_vocabulary": discovered_vocabulary,
             "pronunciation_cards": ai_build_pronunciation_cards(prompt, [], discovered_vocabulary, selected_language),
+            "smart_activity": smart_activity,
+            "detected_intents": detected_intents,
             "practice_loop": [
                 "Ecoute le mot une fois.",
                 "Repete-le lentement.",
@@ -564,6 +579,8 @@ def build_ai_guidance(prompt, selected_language=None):
         "related_lessons": related_lessons[:3],
         "discovered_vocabulary": discovered_vocabulary,
         "pronunciation_cards": pronunciation_cards,
+        "smart_activity": smart_activity,
+        "detected_intents": detected_intents,
         "practice_loop": [
             "Ecoute le mot ou l'expression proposee.",
             "Repete a voix haute trois fois.",
@@ -899,6 +916,8 @@ def landing_ai_chat(request):
             "suggestions": response["suggestions"],
             "source": response["source"],
             "pronunciation_cards": response["pronunciation_cards"],
+            "detected_intents": response.get("detected_intents", []),
+            "learning_activity": response.get("learning_activity", {}),
         }
     )
 
@@ -956,4 +975,3 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Vous etes maintenant deconnecte en toute securite.")
     return redirect("accueil")
-
