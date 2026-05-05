@@ -56,7 +56,17 @@
         </p>
         {% if request.user.is_authenticated %}
             {% if enrollment %}
-                <p style="margin-bottom:0;"><a class="cta" href="#modules">Continuer le parcours</a></p>
+                <p style="margin-bottom:0;display:flex;gap:10px;flex-wrap:wrap;">
+                    <a class="cta" href="#modules">Continuer le parcours</a>
+                    {% if certificate %}
+                        <a class="cta" href="{% url 'certificate_detail' certificate.code %}">Voir le certificat</a>
+                    {% elif enrollment.progress_percent >= 80 %}
+                        <form method="post" action="{% url 'certificate_issue' course.slug %}" style="margin:0;">
+                            {% csrf_token %}
+                            <button type="submit" class="cta">Generer certificat</button>
+                        </form>
+                    {% endif %}
+                </p>
             {% else %}
                 <form method="post" action="{% url 'enroll_course' course.slug %}" style="margin-bottom:0;">
                     {% csrf_token %}

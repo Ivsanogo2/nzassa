@@ -1,0 +1,63 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Jeux | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .stack{display:grid;gap:22px}.hero,.game-card{padding:24px;border-radius:8px;border:1px solid rgba(16,24,23,.1);background:rgba(255,255,255,.82);box-shadow:0 16px 36px rgba(16,24,23,.08)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:40px;padding:9px 15px;text-decoration:none}.choice{border:1px solid rgba(16,24,23,.12);border-radius:14px;background:white;padding:12px;font-weight:800;cursor:pointer}@media(max-width:900px){.grid{grid-template-columns:1fr}}
+</style>
+
+<div class="stack">
+    <section class="hero">
+        <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Gamification</p>
+        <h1 style="margin:0 0 8px;font-size:2.35rem;">Jeux educatifs</h1>
+        <p style="line-height:1.75;margin-bottom:0;">Memory, quiz rapide et association mots/images pour apprendre avec peu de texte et beaucoup d'interaction.</p>
+    </section>
+
+    <section class="grid">
+        <article class="game-card">
+            <h2 style="margin-top:0;">Quiz rapide</h2>
+            <p id="quiz-question">{{ fallback_game.quiz.question }}</p>
+            <div style="display:grid;gap:8px;">
+                {% for choice in fallback_game.quiz.choices %}
+                    <button class="choice" data-answer="{{ fallback_game.quiz.answer }}">{{ choice }}</button>
+                {% endfor %}
+            </div>
+            <p id="quiz-feedback" style="font-weight:900;"></p>
+        </article>
+
+        <article class="game-card">
+            <h2 style="margin-top:0;">Association image/mot</h2>
+            <p>{{ fallback_game.match.prompt }}</p>
+            {% for choice in fallback_game.match.choices %}
+                <button class="choice" data-match="{{ choice.label }}" data-answer="{{ fallback_game.match.answer }}">{{ choice.emoji }} {{ choice.label }}</button>
+            {% endfor %}
+            <p id="match-feedback" style="font-weight:900;"></p>
+        </article>
+
+        {% for game in games %}
+            <article class="game-card">
+                <h2 style="margin-top:0;">{{ game.title }}</h2>
+                <p>{{ game.get_game_type_display }} - {{ game.xp_reward }} XP</p>
+                {% if game.language %}<p>{{ game.language.name }}</p>{% endif %}
+            </article>
+        {% empty %}
+            <article class="game-card">
+                <h2 style="margin-top:0;">Studio de jeux</h2>
+                <p>Ajoutez des jeux publies depuis l'administration pour enrichir ce hub.</p>
+            </article>
+        {% endfor %}
+    </section>
+</div>
+
+<script>
+    document.querySelectorAll("[data-answer]").forEach((button) => {
+        button.addEventListener("click", () => {
+            const expected = button.dataset.answer;
+            const value = button.dataset.match || button.textContent.trim();
+            const feedback = button.dataset.match ? document.getElementById("match-feedback") : document.getElementById("quiz-feedback");
+            feedback.textContent = value === expected ? "Exact. +10 XP mental." : "Presque. Reessaie avec l'indice culturel.";
+        });
+    });
+</script>
+{% endblock %}

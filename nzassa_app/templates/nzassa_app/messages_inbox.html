@@ -1,0 +1,47 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Messages | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(320px,.6fr);gap:22px;align-items:start}.panel,.message{padding:24px;border-radius:8px;border:1px solid rgba(16,24,23,.1);background:rgba(255,255,255,.82);box-shadow:0 16px 36px rgba(16,24,23,.08)}.stack{display:grid;gap:14px}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:40px;padding:9px 15px;text-decoration:none}textarea,input,select{width:100%;border:1px solid rgba(16,24,23,.12);border-radius:14px;font:inherit;padding:12px}.form p{display:grid;gap:8px;margin:0}@media(max-width:900px){.layout{grid-template-columns:1fr}}
+</style>
+
+<div class="layout">
+    <main class="stack">
+        <section class="panel">
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Messagerie</p>
+            <h1 style="margin:0;">Messages prives</h1>
+        </section>
+        {% for message in inbox %}
+            <article class="message">
+                <strong>{{ message.sender.get_full_name|default:message.sender.username }}</strong>
+                <span style="color:rgba(16,24,23,.58);">- {{ message.created_at|date:"d M Y H:i" }}</span>
+                <div style="line-height:1.75;">{{ message.body|linebreaks }}</div>
+                {% if message.image %}<img src="{{ message.image.url }}" alt="Image message" style="max-width:100%;border-radius:8px;">{% endif %}
+            </article>
+        {% empty %}
+            <article class="message">Aucun message recu.</article>
+        {% endfor %}
+    </main>
+    <aside class="panel">
+        <h2 style="margin-top:0;">Nouveau message</h2>
+        <form class="form" method="post" enctype="multipart/form-data" style="display:grid;gap:12px;">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn" type="submit">Envoyer</button>
+        </form>
+        <h3>Envoyes recents</h3>
+        <div class="stack">
+            {% for message in sent %}
+                <div class="message" style="box-shadow:none;">
+                    <strong>A {{ message.recipient.username }}</strong>
+                    <p style="margin-bottom:0;">{{ message.body|truncatewords:16 }}</p>
+                </div>
+            {% empty %}
+                <p>Aucun message envoye.</p>
+            {% endfor %}
+        </div>
+    </aside>
+</div>
+{% endblock %}

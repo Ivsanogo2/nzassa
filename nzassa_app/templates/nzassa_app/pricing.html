@@ -31,6 +31,18 @@
         background: linear-gradient(135deg, rgba(13, 59, 102, 0.96), rgba(31, 107, 79, 0.94));
         color: white;
     }
+    .plan-cta {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 42px;
+        padding: 10px 16px;
+        border-radius: 999px;
+        background: white;
+        color: var(--forest);
+        font-weight: 900;
+        text-decoration: none;
+    }
 
     @media (max-width: 860px) {
         .plans {
@@ -73,6 +85,9 @@
                     <li>Experiences VR, contenus audio natifs et culture premium</li>
                     <li>Parcours personnalises, badges exclusifs et analytics</li>
                 </ul>
+                {% if request.user.is_authenticated %}
+                    <p style="margin-bottom:0;"><a class="plan-cta" href="{% url 'mobile_money_payment' %}">Payer avec Mobile Money</a></p>
+                {% endif %}
             </article>
         </div>
     </section>

@@ -1,0 +1,79 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}{{ title }} | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .form-wrap {
+        display: grid;
+        gap: 22px;
+    }
+    .form-head,
+    .form-card {
+        padding: 28px;
+    }
+    .form-card {
+        display: grid;
+        gap: 16px;
+    }
+    .form-card p {
+        display: grid;
+        gap: 8px;
+        margin: 0;
+    }
+    .form-card label {
+        font-weight: 900;
+        color: rgba(16, 24, 23, 0.74);
+    }
+    .form-card input,
+    .form-card textarea,
+    .form-card select {
+        width: 100%;
+        border: 1px solid rgba(16, 24, 23, 0.12);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--ink);
+        font: inherit;
+        padding: 12px;
+    }
+    .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+    .btn {
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--forest), #2f936b);
+        color: white;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: inherit;
+        font-weight: 800;
+        min-height: 44px;
+        padding: 10px 18px;
+        text-decoration: none;
+    }
+    .btn.secondary {
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+    }
+</style>
+
+<div class="form-wrap">
+    <section class="surface-card form-head">
+        <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:0.06em;">Nzassa School</p>
+        <h1 style="margin-bottom:0;">{{ title }}</h1>
+    </section>
+    <form class="surface-card form-card" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="actions">
+            <button class="btn" type="submit">{{ submit_label }}</button>
+            {% if back_url %}<a class="btn secondary" href="{{ back_url }}">Retour</a>{% endif %}
+        </div>
+    </form>
+</div>
+{% endblock %}

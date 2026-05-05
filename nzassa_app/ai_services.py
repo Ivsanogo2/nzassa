@@ -13,6 +13,7 @@ from django.db.models import Q
 from django.utils import timezone
 
 from .models import (
+    Book,
     CoachConversation,
     CoachMessage,
     Course,
@@ -20,6 +21,7 @@ from .models import (
     LearnedWord,
     Lesson,
     PronunciationAttempt,
+    Story,
     Traduction,
 )
 
@@ -351,6 +353,24 @@ def serialize_course(course):
     }
 
 
+def serialize_story(story):
+    return {
+        "title": story.title,
+        "slug": story.slug,
+        "ethnicity": story.ethnicity.name if story.ethnicity_id else "",
+        "location": story.location,
+    }
+
+
+def serialize_book(book):
+    return {
+        "title": book.title,
+        "slug": book.slug,
+        "author": book.author_name,
+        "category": book.get_category_display(),
+    }
+
+
 def serialize_lesson(lesson):
     return {
         "title": lesson.title,
@@ -557,10 +577,19 @@ def gather_knowledge(prompt, selected_language=None):
     translation_query = Q()
     course_query = Q()
     lesson_query = Q()
+    story_query = Q()
+    book_query = Q()
     for term in lookup_terms:
         translation_query |= Q(mot_origine__icontains=term) | Q(resultat_traduction__icontains=term)
         course_query |= Q(title__icontains=term) | Q(short_description__icontains=term) | Q(description__icontains=term)
         lesson_query |= Q(title__icontains=term) | Q(content__icontains=term) | Q(key_phrase__icontains=term)
+        story_query |= (
+            Q(title__icontains=term)
+            | Q(description__icontains=term)
+            | Q(location__icontains=term)
+            | Q(ethnicity__name__icontains=term)
+        )
+        book_query |= Q(title__icontains=term) | Q(description__icontains=term) | Q(author_name__icontains=term)
 
     translations = []
     if translation_query:
@@ -580,6 +609,25 @@ def gather_knowledge(prompt, selected_language=None):
     else:
         related_lessons = list(related_lessons[:4])
 
+    story_queryset = Story.objects.filter(is_published=True).select_related("ethnicity")
+    book_queryset = Book.objects.filter(is_published=True)
+    if selected_language:
+        language_name = selected_language.name
+        story_queryset = story_queryset.filter(
+            Q(ethnicity__name__icontains=language_name) | Q(description__icontains=language_name)
+        )
+        book_queryset = book_queryset.filter(Q(title__icontains=language_name) | Q(description__icontains=language_name))
+
+    if story_query:
+        related_stories = list(story_queryset.filter(story_query).distinct()[:4])
+    else:
+        related_stories = list(story_queryset[:4])
+
+    if book_query:
+        related_books = list(book_queryset.filter(book_query).distinct()[:4])
+    else:
+        related_books = list(book_queryset[:4])
+
     discovered = build_discovered_vocabulary(limit=12)
     prompt_lookup = normalize_lookup_text(prompt)
     discovered_matches = [
@@ -595,6 +643,8 @@ def gather_knowledge(prompt, selected_language=None):
         "translations": translations,
         "courses": related_courses,
         "lessons": related_lessons,
+        "stories": related_stories,
+        "books": related_books,
         "discovered": discovered,
         "discovered_matches": discovered_matches,
     }
@@ -805,6 +855,10 @@ def build_follow_up_suggestions(knowledge, learned_words, selected_language=None
 
     if knowledge["lessons"]:
         suggestions.append(f"Exercice sur {knowledge['lessons'][0].title}")
+    if knowledge.get("stories"):
+        suggestions.append(f"Lire l'histoire {knowledge['stories'][0].title}")
+    if knowledge.get("books"):
+        suggestions.append(f"Lire le livre {knowledge['books'][0].title}")
 
     detected_intents = detected_intents or []
     if "game" not in detected_intents:
@@ -826,6 +880,8 @@ def build_local_reply(message, knowledge, memory_words, selected_language=None, 
     translations = knowledge["translations"]
     lessons = knowledge["lessons"]
     courses = knowledge["courses"]
+    stories = knowledge.get("stories", [])
+    books = knowledge.get("books", [])
     detected_intents = detected_intents or detect_intents(message)
 
     lines = []
@@ -866,6 +922,19 @@ def build_local_reply(message, knowledge, memory_words, selected_language=None, 
         lines.append(
             "Je peux te construire une mini-seance avec 3 mots, leur sens, la prononciation et un petit test oral."
         )
+    elif stories:
+        story = stories[0]
+        lines.append(
+            f"Je peux relier ta demande a l'histoire '{story.title}'"
+            f"{' a ' + story.location if story.location else ''}."
+        )
+        lines.append("Lis-la, note trois mots culturels, puis demande-moi un quiz dessus.")
+    elif books:
+        book = books[0]
+        lines.append(
+            f"Je te recommande aussi le livre '{book.title}' de {book.author_name} pour approfondir ce theme."
+        )
+        lines.append("Apres lecture, je peux resumer le passage ou creer des questions de comprehension.")
     else:
         language_name = selected_language.name if selected_language else "Nzassa"
         lines.append(
@@ -874,6 +943,11 @@ def build_local_reply(message, knowledge, memory_words, selected_language=None, 
         lines.append(
             "Commence par me dire si tu veux le sens, une phrase d'exemple ou un exercice de prononciation."
         )
+
+    if stories:
+        lines.append(f"Suggestion personnalisee: lis l'histoire '{stories[0].title}' pour relier le mot a un recit.")
+    if books:
+        lines.append(f"Ressource utile: '{books[0].title}' peut prolonger cette lecon en lecture.")
 
     if learning_activity:
         lines.append(f"Activite proposee: {learning_activity['title']}. {learning_activity.get('prompt', '')}")
@@ -916,6 +990,14 @@ def build_openai_context(message, knowledge, memory_words, selected_language=Non
         f"- {item.title} ({item.language.name}, {item.level})"
         for item in knowledge["courses"][:4]
     ]
+    story_lines = [
+        f"- {item.title} | ethnie: {item.ethnicity.name if item.ethnicity_id else 'non definie'} | lieu: {item.location or 'non defini'}"
+        for item in knowledge.get("stories", [])[:4]
+    ]
+    book_lines = [
+        f"- {item.title} | auteur: {item.author_name} | categorie: {item.get_category_display()}"
+        for item in knowledge.get("books", [])[:4]
+    ]
     memory_lines = [
         f"- {item.word} | maitrise: {item.mastery_level}% | succes prononciation: {item.success_rate}%"
         for item in memory_words[:6]
@@ -939,6 +1021,10 @@ def build_openai_context(message, knowledge, memory_words, selected_language=Non
             "\n".join(lesson_lines) if lesson_lines else "- aucune lecon ciblee",
             "Parcours relies:",
             "\n".join(course_lines) if course_lines else "- aucun parcours cible",
+            "Histoires reliees:",
+            "\n".join(story_lines) if story_lines else "- aucune histoire ciblee",
+            "Livres relies:",
+            "\n".join(book_lines) if book_lines else "- aucun livre cible",
             "Memoire apprenant:",
             "\n".join(memory_lines) if memory_lines else "- aucun mot memorise pour l'instant",
             "Activite Nzassa conseillee:",
@@ -1431,6 +1517,8 @@ def chat_with_coach(conversation, message, selected_language=None):
         "learned_words": [serialize_word(word) for word in refreshed_words],
         "related_courses": [serialize_course(course) for course in knowledge["courses"][:3]],
         "related_lessons": [serialize_lesson(lesson) for lesson in knowledge["lessons"][:3]],
+        "related_stories": [serialize_story(story) for story in knowledge.get("stories", [])[:3]],
+        "related_books": [serialize_book(book) for book in knowledge.get("books", [])[:3]],
         "messages": [serialize_message(message) for message in conversation.messages.order_by("-created_at")[:12]][::-1],
     }
 

@@ -1,0 +1,55 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Audio | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .audio-stack{display:grid;gap:22px}.audio-hero,.audio-card,.filter-panel{padding:26px;border-radius:8px;border:1px solid rgba(16,24,23,.1);background:rgba(255,255,255,.82);box-shadow:0 16px 36px rgba(16,24,23,.08)}.audio-hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end}.audio-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.audio-card{display:grid;gap:14px}.tag{display:inline-flex;width:max-content;border-radius:999px;background:rgba(21,94,75,.1);color:var(--forest);padding:7px 11px;font-weight:900;font-size:.82rem}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:42px;padding:10px 16px;text-decoration:none}.filter-form{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:12px}.filter-form input{border:1px solid rgba(16,24,23,.12);border-radius:14px;font:inherit;padding:12px}@media(max-width:900px){.audio-hero,.audio-grid,.filter-form{grid-template-columns:1fr}}
+</style>
+
+<div class="audio-stack">
+    <section class="audio-hero">
+        <div>
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Podcast et audio offline</p>
+            <h1 style="margin:0 0 8px;font-size:2.35rem;">Bibliotheque audio</h1>
+            <p style="line-height:1.75;margin-bottom:0;">Histoires narrees, lecons audio et contenus telechargeables pour apprendre meme avec peu de connexion.</p>
+        </div>
+        {% if request.user.is_authenticated %}<a class="btn" href="{% url 'audio_add' %}">Ajouter un audio</a>{% endif %}
+    </section>
+
+    <section class="filter-panel">
+        <form class="filter-form" method="get">
+            <input type="search" name="q" value="{{ query }}" placeholder="Rechercher par titre, transcription ou langue">
+            <button class="btn" type="submit">Rechercher</button>
+        </form>
+    </section>
+
+    <section class="audio-grid">
+        {% for track in tracks %}
+            <article class="audio-card">
+                {% if track.language %}<span class="tag">{{ track.language.name }}</span>{% endif %}
+                <h2 style="margin:0;">{{ track.title }}</h2>
+                <p style="line-height:1.65;color:rgba(16,24,23,.72);">{{ track.transcript|truncatewords:22|default:"Audio Nzassa pret pour une ecoute courte." }}</p>
+                {% if track.source_url %}
+                    <audio controls preload="metadata" style="width:100%;">
+                        <source src="{{ track.source_url }}">
+                    </audio>
+                {% endif %}
+                {% if request.user.is_authenticated and track.is_downloadable %}
+                    <form method="post" action="{% url 'offline_add' %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="content_type" value="audio">
+                        <input type="hidden" name="object_id" value="{{ track.id }}">
+                        <button class="btn" type="submit">Ajouter offline</button>
+                    </form>
+                {% endif %}
+            </article>
+        {% empty %}
+            <article class="audio-card">
+                <h2 style="margin-top:0;">Aucun audio</h2>
+                <p>Ajoutez un conte narre, une lecon audio ou un podcast culturel.</p>
+            </article>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

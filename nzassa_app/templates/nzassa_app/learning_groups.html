@@ -1,0 +1,45 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Groupes | Discussion{% endblock %}
+
+{% block content %}
+<style>
+    .stack{display:grid;gap:22px}.hero,.group-card{padding:26px;border-radius:8px;border:1px solid rgba(16,24,23,.1);background:rgba(255,255,255,.82);box-shadow:0 16px 36px rgba(16,24,23,.08)}.hero{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:42px;padding:10px 16px;text-decoration:none}.btn.secondary{background:rgba(8,48,77,.08);color:var(--lagoon)}.tag{display:inline-flex;border-radius:999px;background:rgba(21,94,75,.1);color:var(--forest);padding:7px 11px;font-weight:900;font-size:.82rem}@media(max-width:900px){.hero,.grid{grid-template-columns:1fr}}
+</style>
+
+<div class="stack">
+    <section class="hero">
+        <div>
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Communautes par langue</p>
+            <h1 style="margin:0 0 8px;font-size:2.35rem;">Groupes d'apprentissage</h1>
+            <p style="line-height:1.75;margin-bottom:0;">Organisez les echanges par langue, niveau ou communaute locale.</p>
+        </div>
+        <a class="btn" href="{% url 'group_create' %}">Creer un groupe</a>
+    </section>
+
+    <section class="grid">
+        {% for group in groups %}
+            <article class="group-card">
+                {% if group.language %}<span class="tag">{{ group.language.name }}</span>{% endif %}
+                <h2>{{ group.name }}</h2>
+                <p style="line-height:1.65;color:rgba(16,24,23,.72);">{{ group.description|default:"Groupe Nzassa pour progresser ensemble." }}</p>
+                <p>{{ group.member_count }} membre{{ group.member_count|pluralize }} - {{ group.post_count }} post{{ group.post_count|pluralize }}</p>
+                <p style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:0;">
+                    <a class="btn secondary" href="{% url 'group_detail' group.slug %}">Ouvrir</a>
+                    {% if group.id not in my_group_ids %}
+                        <form method="post" action="{% url 'group_join' group.slug %}" style="margin:0;">
+                            {% csrf_token %}
+                            <button class="btn" type="submit">Rejoindre</button>
+                        </form>
+                    {% endif %}
+                </p>
+            </article>
+        {% empty %}
+            <article class="group-card">
+                <h2 style="margin-top:0;">Aucun groupe</h2>
+                <p>Creer un groupe baoule, dioula ou langue des signes pour commencer.</p>
+            </article>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

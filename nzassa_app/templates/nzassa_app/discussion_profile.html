@@ -1,0 +1,131 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Profil {{ profile_user.username }} | Discussion{% endblock %}
+
+{% block content %}
+<style>
+    .profile-stack {
+        display: grid;
+        gap: 22px;
+    }
+
+    .profile-hero,
+    .post-card {
+        border: 1px solid rgba(16, 24, 23, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 16px 36px rgba(16, 24, 23, 0.08);
+        padding: 24px;
+    }
+
+    .profile-hero {
+        display: grid;
+        grid-template-columns: 88px minmax(0, 1fr);
+        gap: 18px;
+        align-items: center;
+    }
+
+    .avatar {
+        width: 88px;
+        height: 88px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--clay), var(--gold));
+        color: white;
+        font-size: 2rem;
+        font-weight: 900;
+    }
+
+    .profile-hero h1 {
+        margin: 0 0 8px;
+        font-size: 2.2rem;
+    }
+
+    .stat-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+        margin-top: 16px;
+    }
+
+    .stat-box {
+        padding: 14px;
+        border-radius: 8px;
+        background: rgba(247, 239, 226, 0.74);
+    }
+
+    .stat-box strong {
+        display: block;
+        font-size: 1.35rem;
+    }
+
+    .action-link {
+        border-radius: 999px;
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 800;
+        min-height: 40px;
+        padding: 9px 15px;
+        text-decoration: none;
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 460px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid rgba(16, 24, 23, 0.1);
+        margin-top: 12px;
+    }
+
+    @media (max-width: 760px) {
+        .profile-hero,
+        .stat-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="profile-stack">
+    <section class="profile-hero">
+        <div class="avatar">{{ profile_user.username|slice:":1"|upper }}</div>
+        <div>
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:0.06em;">Profil utilisateur</p>
+            <h1>{{ profile_user.get_full_name|default:profile_user.username }}</h1>
+            <p style="line-height:1.7;margin-bottom:0;">
+                {% if user_profile and user_profile.selected_language %}
+                    Langue cible: <strong>{{ user_profile.selected_language.name }}</strong>.
+                {% else %}
+                    Membre de la communaute Nzassa.
+                {% endif %}
+            </p>
+            <div class="stat-grid">
+                <div class="stat-box"><strong>{{ stats.posts }}</strong><span>publications</span></div>
+                <div class="stat-box"><strong>{{ stats.likes }}</strong><span>likes recus</span></div>
+                <div class="stat-box"><strong>{{ stats.comments }}</strong><span>commentaires</span></div>
+            </div>
+            <p style="margin-bottom:0;"><a class="action-link" href="{% url 'discussion_feed' %}">Retour au fil</a></p>
+        </div>
+    </section>
+
+    {% for post in posts %}
+        <article class="post-card">
+            <div style="color:rgba(16,24,23,0.58);font-weight:800;">{{ post.created_at|date:"d M Y H:i" }}</div>
+            <div style="line-height:1.75;">{{ post.content|linebreaks }}</div>
+            {% if post.image %}
+                <img class="post-image" src="{{ post.image.url }}" alt="Image de publication">
+            {% endif %}
+            <p style="margin-bottom:0;">{{ post.likes_total }} like{{ post.likes_total|pluralize }} - {{ post.comments_total }} commentaire{{ post.comments_total|pluralize }}</p>
+        </article>
+    {% empty %}
+        <section class="post-card">
+            <h2 style="margin-top:0;">Aucune publication</h2>
+            <p>Ce profil n'a pas encore publie dans la discussion.</p>
+        </section>
+    {% endfor %}
+</div>
+{% endblock %}

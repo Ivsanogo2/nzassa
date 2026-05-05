@@ -1,0 +1,36 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Micro-lecons | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .layout{display:grid;grid-template-columns:minmax(0,.9fr) minmax(320px,.55fr);gap:22px;align-items:start}.panel,.item{padding:24px;border-radius:8px;border:1px solid rgba(16,24,23,.1);background:rgba(255,255,255,.82);box-shadow:0 16px 36px rgba(16,24,23,.08)}.stack{display:grid;gap:14px}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:40px;padding:9px 15px;text-decoration:none}.form p{display:grid;gap:8px;margin:0}input,select{width:100%;border:1px solid rgba(16,24,23,.12);border-radius:14px;font:inherit;padding:12px}@media(max-width:900px){.layout{grid-template-columns:1fr}}
+</style>
+
+<div class="layout">
+    <main class="stack">
+        <section class="panel">
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.06em;">WhatsApp et SMS</p>
+            <h1 style="margin:0 0 8px;font-size:2.35rem;">Micro-lecons par message</h1>
+            <p style="line-height:1.75;margin-bottom:0;">Preparez l'apprentissage par petits messages pour les utilisateurs qui reviennent via WhatsApp ou SMS.</p>
+        </section>
+        {% for subscription in subscriptions %}
+            <article class="item">
+                <strong>{{ subscription.get_channel_display }}</strong>
+                <p>{{ subscription.phone_number }} {% if subscription.language %}- {{ subscription.language.name }}{% endif %}</p>
+                <p>{{ subscription.is_active|yesno:"Actif,Pause" }}</p>
+            </article>
+        {% empty %}
+            <article class="item">Aucun abonnement aux micro-lecons.</article>
+        {% endfor %}
+    </main>
+    <aside class="panel">
+        <h2 style="margin-top:0;">Activer</h2>
+        <form class="form" method="post" style="display:grid;gap:12px;">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button class="btn" type="submit">Enregistrer</button>
+        </form>
+    </aside>
+</div>
+{% endblock %}

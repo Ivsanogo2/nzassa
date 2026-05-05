@@ -1,0 +1,267 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Discussion | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .discussion-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 22px;
+        align-items: start;
+    }
+
+    .feed-column,
+    .side-column {
+        display: grid;
+        gap: 18px;
+    }
+
+    .feed-hero,
+    .composer,
+    .post-card,
+    .side-panel {
+        border: 1px solid rgba(16, 24, 23, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 16px 36px rgba(16, 24, 23, 0.08);
+    }
+
+    .feed-hero,
+    .composer,
+    .post-card,
+    .side-panel {
+        padding: 22px;
+    }
+
+    .feed-hero h1 {
+        margin: 0 0 8px;
+        font-size: 2.2rem;
+    }
+
+    .composer form,
+    .comment-form {
+        display: grid;
+        gap: 10px;
+    }
+
+    .composer textarea,
+    .composer select,
+    .composer input[type="file"],
+    .comment-form input {
+        width: 100%;
+        border: 1px solid rgba(16, 24, 23, 0.12);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--ink);
+        font: inherit;
+        padding: 12px;
+    }
+
+    .action-link,
+    .small-action {
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--forest), #2f936b);
+        color: white;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: inherit;
+        font-weight: 800;
+        min-height: 40px;
+        padding: 9px 15px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .small-action.secondary {
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+    }
+
+    .post-head,
+    .post-actions,
+    .stat-row {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        align-items: center;
+    }
+
+    .avatar {
+        width: 46px;
+        height: 46px;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--clay), var(--gold));
+        color: white;
+        font-weight: 900;
+    }
+
+    .post-content {
+        margin: 16px 0;
+        line-height: 1.7;
+        color: rgba(16, 24, 23, 0.78);
+    }
+
+    .post-image {
+        width: 100%;
+        max-height: 520px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid rgba(16, 24, 23, 0.1);
+        margin-bottom: 14px;
+    }
+
+    .comment-list {
+        display: grid;
+        gap: 10px;
+        margin-top: 14px;
+    }
+
+    .comment-item {
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(247, 239, 226, 0.74);
+    }
+
+    .notification-list,
+    .profile-links {
+        display: grid;
+        gap: 10px;
+    }
+
+    .notification-item,
+    .stat-box {
+        padding: 12px;
+        border-radius: 8px;
+        background: rgba(247, 239, 226, 0.74);
+    }
+
+    .stat-row {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .stat-box strong {
+        display: block;
+        font-size: 1.25rem;
+    }
+
+    .inline-form {
+        margin: 0;
+    }
+
+    @media (max-width: 980px) {
+        .discussion-layout {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="discussion-layout">
+    <div class="feed-column">
+        <section class="feed-hero">
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:0.06em;">Communaute Nzassa</p>
+            <h1>Fil d'actualite</h1>
+            <p style="margin-bottom:0;line-height:1.7;">Publiez une question, une image, une expression locale ou une decouverte culturelle. Les publications recentes arrivent en premier.</p>
+        </section>
+
+        <section class="composer">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.group }}
+                {{ form.content }}
+                {{ form.image }}
+                <button class="action-link" type="submit">Publier</button>
+            </form>
+        </section>
+
+        {% for post in posts %}
+            <article class="post-card">
+                <div class="post-head">
+                    <div class="avatar">{{ post.author.username|slice:":1"|upper }}</div>
+                    <div>
+                        <strong><a href="{% url 'discussion_profile' post.author.username %}">{{ post.author.get_full_name|default:post.author.username }}</a></strong>
+                        <div style="color:rgba(16,24,23,0.58);">{{ post.created_at|date:"d M Y H:i" }}</div>
+                    </div>
+                </div>
+                <div class="post-content">{{ post.content|linebreaks }}</div>
+                {% if post.image %}
+                    <img class="post-image" src="{{ post.image.url }}" alt="Image de publication">
+                {% endif %}
+                <div class="post-actions">
+                    <span>{{ post.likes_total }} like{{ post.likes_total|pluralize }}</span>
+                    <span>{{ post.comments_total }} commentaire{{ post.comments_total|pluralize }}</span>
+                    <form class="inline-form" method="post" action="{% url 'post_like' post.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button class="small-action" type="submit">
+                            {% if post.id in liked_post_ids %}Aime{% else %}Liker{% endif %}
+                        </button>
+                    </form>
+                </div>
+                <div class="comment-list">
+                    {% for comment in post.comments.all %}
+                        <div class="comment-item">
+                            <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                            <span style="color:rgba(16,24,23,0.58);">- {{ comment.created_at|date:"d M H:i" }}</span>
+                            <div>{{ comment.content|linebreaksbr }}</div>
+                        </div>
+                    {% endfor %}
+                </div>
+                <form class="comment-form" method="post" action="{% url 'post_comment' post.id %}">
+                    {% csrf_token %}
+                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                    {{ comment_form.content }}
+                    <button class="small-action secondary" type="submit">Commenter</button>
+                </form>
+            </article>
+        {% empty %}
+            <section class="post-card">
+                <h2 style="margin-top:0;">Aucune publication</h2>
+                <p>Le fil est pret. Publiez le premier message de la communaute.</p>
+            </section>
+        {% endfor %}
+    </div>
+
+    <aside class="side-column">
+        <section class="side-panel">
+            <h2 style="margin-top:0;">Votre profil</h2>
+            <p style="line-height:1.7;">Connecte en tant que <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>.</p>
+            <div class="profile-links">
+                <a class="small-action secondary" href="{% url 'discussion_profile' request.user.username %}">Voir mon profil</a>
+                <a class="small-action secondary" href="{% url 'learning_groups' %}">Groupes</a>
+                <a class="small-action secondary" href="{% url 'messages_inbox' %}">Messages</a>
+                <a class="small-action secondary" href="{% url 'notifications' %}">Notifications</a>
+            </div>
+        </section>
+
+        <section class="side-panel">
+            <h2 style="margin-top:0;">Activite</h2>
+            <div class="stat-row">
+                <div class="stat-box"><strong>{{ community_stats.members }}</strong><span>membres</span></div>
+                <div class="stat-box"><strong>{{ community_stats.posts }}</strong><span>posts</span></div>
+                <div class="stat-box"><strong>{{ community_stats.comments }}</strong><span>avis</span></div>
+            </div>
+        </section>
+
+        <section class="side-panel">
+            <h2 style="margin-top:0;">Notifications</h2>
+            <div class="notification-list">
+                {% for notification in unread_notifications %}
+                    <a class="notification-item" href="{{ notification.target_url|default:'#' }}">
+                        <strong>{{ notification.actor.get_full_name|default:notification.actor.username }}</strong>
+                        {{ notification.verb }} {{ notification.target_label }}
+                    </a>
+                {% empty %}
+                    <div class="notification-item">Aucune notification non lue.</div>
+                {% endfor %}
+            </div>
+        </section>
+    </aside>
+</div>
+{% endblock %}

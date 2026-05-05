@@ -1,0 +1,58 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Mini-videos | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .shorts-layout{display:grid;gap:22px}.shorts-hero{padding:28px;border-radius:8px;border:1px solid rgba(16,24,23,.1);background:rgba(255,255,255,.82);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:16px;align-items:end}.shorts-feed{display:grid;gap:18px;max-width:520px;margin:0 auto}.short-card{border-radius:8px;border:1px solid rgba(16,24,23,.1);background:#101817;color:white;overflow:hidden;box-shadow:0 18px 42px rgba(16,24,23,.18)}.video-slot{aspect-ratio:9/16;background:linear-gradient(145deg,#155e4b,#c45a2d);display:grid;place-items:center;overflow:hidden}.video-slot video,.video-slot img{width:100%;height:100%;object-fit:cover}.short-body{padding:18px}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:42px;padding:10px 16px;text-decoration:none}.btn.light{background:rgba(255,255,255,.16)}@media(max-width:760px){.shorts-hero{grid-template-columns:1fr}.shorts-feed{max-width:100%}}
+</style>
+
+<div class="shorts-layout">
+    <section class="shorts-hero">
+        <div>
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.06em;">TikTok educatif</p>
+            <h1 style="margin:0 0 8px;font-size:2.35rem;">Mini-videos Nzassa</h1>
+            <p style="line-height:1.75;margin-bottom:0;">Des lecons courtes, mobiles et partageables pour rendre les langues locales virales.</p>
+        </div>
+        {% if request.user.is_authenticated %}<a class="btn" href="{% url 'short_video_add' %}">Ajouter une video</a>{% endif %}
+    </section>
+
+    <section class="shorts-feed">
+        {% for video in videos %}
+            <article class="short-card">
+                <div class="video-slot">
+                    {% if video.video_file %}
+                        <video controls preload="metadata" poster="{% if video.thumbnail %}{{ video.thumbnail.url }}{% endif %}">
+                            <source src="{{ video.video_file.url }}">
+                        </video>
+                    {% elif video.video_url %}
+                        <a class="btn light" href="{{ video.video_url }}">Ouvrir la video</a>
+                    {% elif video.thumbnail %}
+                        <img src="{{ video.thumbnail.url }}" alt="{{ video.title }}">
+                    {% else %}
+                        <strong>{{ video.title }}</strong>
+                    {% endif %}
+                </div>
+                <div class="short-body">
+                    <h2 style="margin-top:0;">{{ video.title }}</h2>
+                    <p>{{ video.caption|linebreaksbr }}</p>
+                    <p>{{ video.like_count }} like{{ video.like_count|pluralize }}{% if video.language %} - {{ video.language.name }}{% endif %}</p>
+                    {% if request.user.is_authenticated %}
+                        <form method="post" action="{% url 'short_video_like' video.slug %}">
+                            {% csrf_token %}
+                            <button class="btn light" type="submit">{% if video.id in liked_video_ids %}Aimee{% else %}Liker{% endif %}</button>
+                        </form>
+                    {% endif %}
+                </div>
+            </article>
+        {% empty %}
+            <article class="short-card">
+                <div class="short-body">
+                    <h2 style="margin-top:0;">Aucune mini-video</h2>
+                    <p>Publiez une courte lecon video pour lancer ce canal.</p>
+                </div>
+            </article>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

@@ -2,16 +2,21 @@ import json
 import re
 from collections import Counter
 from datetime import date
+from decimal import Decimal
 
 from django.contrib import messages
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView
-from django.db.models import Avg, Count, Sum
-from django.http import HttpResponse, JsonResponse
+from django.db.models import Avg, Count, Q, Sum
+from django.http import FileResponse, Http404, HttpResponse, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.utils import timezone
+from django.utils.crypto import get_random_string
+from django.utils.http import url_has_allowed_host_and_scheme
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.views.decorators.http import require_GET, require_POST
 
 from .ai_services import (
@@ -26,17 +31,52 @@ from .ai_services import (
     get_or_create_conversation,
     get_remote_ai_status,
 )
-from .forms import NzassaLoginForm, NzassaRegistrationForm
+from .forms import (
+    AudioTrackForm,
+    BookForm,
+    CulturalAIForm,
+    LearningGroupForm,
+    MicroLessonSubscriptionForm,
+    MobileMoneyPaymentForm,
+    NzassaLoginForm,
+    NzassaRegistrationForm,
+    PrivateMessageForm,
+    SchoolForm,
+    ShortVideoForm,
+    SocialCommentForm,
+    SocialPostForm,
+    StoryCommentForm,
+    StoryForm,
+)
 from .models import (
+    AudioTrack,
     Badge,
+    Book,
+    Certificate,
     Course,
     CulturalExperience,
+    EducationalGame,
     Enrollment,
+    Ethnicity,
+    FriendConnection,
+    GroupMembership,
     Language,
+    LearningEvent,
+    LearningGroup,
     Lesson,
     LessonProgress,
+    MicroLessonSubscription,
+    MobileMoneyPayment,
     Module,
+    Notification,
+    OfflinePack,
+    PrivateMessage,
     QuizAttempt,
+    School,
+    SchoolMembership,
+    ShortVideo,
+    SocialPost,
+    Story,
     Traduction,
     UserBadge,
     UserProfile,
@@ -90,6 +130,100 @@ LANDING_CONVERSATION_RULES = [
 
 def get_or_create_profile(user):
     return UserProfile.objects.get_or_create(user=user)[0]
+
+
+def redirect_back(request, fallback_name, **fallback_kwargs):
+    next_url = request.POST.get("next") or request.META.get("HTTP_REFERER", "")
+    if next_url and url_has_allowed_host_and_scheme(
+        next_url,
+        allowed_hosts={request.get_host()},
+        require_https=request.is_secure(),
+    ):
+        return redirect(next_url)
+    return redirect(fallback_name, **fallback_kwargs)
+
+
+def create_notification(recipient, actor, verb, target_label="", target_url=""):
+    if not recipient or not actor or recipient == actor:
+        return None
+    return Notification.objects.create(
+        recipient=recipient,
+        actor=actor,
+        verb=verb,
+        target_label=target_label[:200],
+        target_url=target_url[:255],
+    )
+
+
+def get_unread_notifications(user):
+    if not user.is_authenticated:
+        return []
+    return Notification.objects.filter(recipient=user, is_read=False)[:6]
+
+
+def log_learning_event(request, event_type, object_label="", metadata=None):
+    LearningEvent.objects.create(
+        user=request.user if request.user.is_authenticated else None,
+        event_type=event_type,
+        object_label=object_label[:200],
+        metadata=metadata or {},
+    )
+
+
+def build_certificate_code(user, course=None):
+    course_part = course.slug[:8].upper() if course else "NZASSA"
+    return f"NZ-{course_part}-{user.id}-{get_random_string(6).upper()}"
+
+
+def escape_pdf_text(text):
+    return (text or "").replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+
+
+def build_simple_certificate_pdf(certificate):
+    learner = certificate.user.get_full_name() or certificate.user.username
+    course_title = certificate.course.title if certificate.course_id else "Parcours Nzassa"
+    lines = [
+        "Nzassa School",
+        "Certificat de progression",
+        f"Attribue a {learner}",
+        f"Parcours: {course_title}",
+        f"Niveau: {certificate.level_label or 'Nzassa'}",
+        f"Score: {certificate.score}%",
+        f"Code: {certificate.code}",
+        f"Date: {certificate.issued_at:%d/%m/%Y}",
+    ]
+
+    text_commands = ["BT", "/F1 26 Tf", "72 760 Td"]
+    for index, line in enumerate(lines):
+        if index == 0:
+            text_commands.append(f"({escape_pdf_text(line)}) Tj")
+        else:
+            text_commands.append("0 -52 Td")
+            text_commands.append("/F1 18 Tf" if index > 1 else "/F1 22 Tf")
+            text_commands.append(f"({escape_pdf_text(line)}) Tj")
+    text_commands.append("ET")
+    stream = "\n".join(text_commands).encode("latin-1", errors="replace")
+
+    objects = [
+        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n",
+        b"2 0 obj<</Type/Pages/Count 1/Kids[3 0 R]>>endobj\n",
+        b"3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Resources<</Font<</F1 4 0 R>>>>/Contents 5 0 R>>endobj\n",
+        b"4 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica-Bold>>endobj\n",
+        b"5 0 obj<</Length " + str(len(stream)).encode("ascii") + b">>stream\n" + stream + b"\nendstream\nendobj\n",
+    ]
+    pdf = bytearray(b"%PDF-1.4\n")
+    offsets = [0]
+    for obj in objects:
+        offsets.append(len(pdf))
+        pdf.extend(obj)
+    xref_position = len(pdf)
+    pdf.extend(f"xref\n0 {len(objects) + 1}\n0000000000 65535 f \n".encode("ascii"))
+    for offset in offsets[1:]:
+        pdf.extend(f"{offset:010d} 00000 n \n".encode("ascii"))
+    pdf.extend(
+        f"trailer<</Size {len(objects) + 1}/Root 1 0 R>>\nstartxref\n{xref_position}\n%%EOF".encode("ascii")
+    )
+    return bytes(pdf)
 
 
 def refresh_badges(profile):
@@ -697,8 +831,10 @@ def course_detail(request, slug):
     course = get_object_or_404(Course.objects.select_related("language"), slug=slug, is_published=True)
     modules = Module.objects.filter(course=course).prefetch_related("lessons")
     enrollment = None
+    certificate = None
     if request.user.is_authenticated:
         enrollment = Enrollment.objects.filter(user=request.user, course=course).first()
+        certificate = Certificate.objects.filter(user=request.user, course=course).first()
 
     return render(
         request,
@@ -707,6 +843,876 @@ def course_detail(request, slug):
             "course": course,
             "modules": modules,
             "enrollment": enrollment,
+            "certificate": certificate,
+        },
+    )
+
+
+@require_GET
+def story_list(request):
+    ethnicity_slug = request.GET.get("ethnie", "").strip()
+    location = request.GET.get("lieu", "").strip()
+    query = request.GET.get("q", "").strip()
+
+    stories = (
+        Story.objects.filter(is_published=True)
+        .select_related("ethnicity", "author")
+        .annotate(likes_total=Count("likes", distinct=True), comments_total=Count("comments", distinct=True))
+    )
+
+    if ethnicity_slug:
+        stories = stories.filter(ethnicity__slug=ethnicity_slug)
+    if location:
+        stories = stories.filter(location__icontains=location)
+    if query:
+        stories = stories.filter(
+            Q(title__icontains=query)
+            | Q(description__icontains=query)
+            | Q(location__icontains=query)
+            | Q(ethnicity__name__icontains=query)
+        )
+
+    liked_story_ids = []
+    if request.user.is_authenticated:
+        liked_story_ids = list(
+            request.user.liked_stories.filter(is_published=True).values_list("id", flat=True)
+        )
+
+    context = {
+        "stories": stories,
+        "ethnicities": Ethnicity.objects.filter(stories__is_published=True).distinct(),
+        "selected_ethnicity": ethnicity_slug,
+        "location": location,
+        "query": query,
+        "liked_story_ids": liked_story_ids,
+    }
+    return render(request, "nzassa_app/story_list.html", context)
+
+
+@login_required
+def story_add(request):
+    if request.method == "POST":
+        form = StoryForm(request.POST, request.FILES)
+        if form.is_valid():
+            story = form.save(commit=False)
+            story.author = request.user
+            story.save()
+            messages.success(request, "Histoire ajoutee avec succes.")
+            return redirect("story_detail", slug=story.slug)
+    else:
+        form = StoryForm()
+
+    return render(
+        request,
+        "nzassa_app/story_form.html",
+        {"form": form, "title": "Ajouter une histoire", "submit_label": "Publier l'histoire"},
+    )
+
+
+@require_GET
+def story_detail(request, slug):
+    story = get_object_or_404(
+        Story.objects.select_related("ethnicity", "author"),
+        slug=slug,
+        is_published=True,
+    )
+    comments = story.comments.select_related("author")
+    audio_tracks = story.audio_tracks.select_related("language")
+    liked = request.user.is_authenticated and story.likes.filter(id=request.user.id).exists()
+    related_stories = Story.objects.filter(is_published=True).exclude(id=story.id)
+    if story.ethnicity_id:
+        related_stories = related_stories.filter(ethnicity=story.ethnicity)
+    related_stories = related_stories.select_related("ethnicity")[:3]
+
+    return render(
+        request,
+        "nzassa_app/story_detail.html",
+        {
+            "story": story,
+            "comments": comments,
+            "audio_tracks": audio_tracks,
+            "comment_form": StoryCommentForm(),
+            "liked": liked,
+            "related_stories": related_stories,
+        },
+    )
+
+
+@login_required
+@require_POST
+def story_like(request, slug):
+    story = get_object_or_404(Story.objects.select_related("author"), slug=slug, is_published=True)
+    if story.likes.filter(id=request.user.id).exists():
+        story.likes.remove(request.user)
+        messages.info(request, "Like retire.")
+    else:
+        story.likes.add(request.user)
+        create_notification(
+            story.author,
+            request.user,
+            "a aime votre histoire",
+            story.title,
+            reverse("story_detail", kwargs={"slug": story.slug}),
+        )
+        messages.success(request, "Histoire ajoutee a vos coups de coeur.")
+    return redirect_back(request, "story_detail", slug=story.slug)
+
+
+@login_required
+@require_POST
+def story_comment(request, slug):
+    story = get_object_or_404(Story.objects.select_related("author"), slug=slug, is_published=True)
+    form = StoryCommentForm(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.story = story
+        comment.author = request.user
+        comment.save()
+        create_notification(
+            story.author,
+            request.user,
+            "a commente votre histoire",
+            story.title,
+            reverse("story_detail", kwargs={"slug": story.slug}),
+        )
+        messages.success(request, "Commentaire publie.")
+    else:
+        messages.error(request, "Le commentaire est vide ou invalide.")
+    return redirect("story_detail", slug=story.slug)
+
+
+@require_GET
+def library(request):
+    query = request.GET.get("q", "").strip()
+    category = request.GET.get("categorie", "").strip()
+
+    books = Book.objects.filter(is_published=True).select_related("uploaded_by").prefetch_related("favorites")
+    if query:
+        books = books.filter(
+            Q(title__icontains=query)
+            | Q(author_name__icontains=query)
+            | Q(description__icontains=query)
+        )
+    if category:
+        books = books.filter(category=category)
+
+    favorite_book_ids = []
+    if request.user.is_authenticated:
+        favorite_book_ids = list(request.user.favorite_books.values_list("id", flat=True))
+
+    return render(
+        request,
+        "nzassa_app/library.html",
+        {
+            "books": books,
+            "query": query,
+            "selected_category": category,
+            "categories": Book.CATEGORY_CHOICES,
+            "favorite_book_ids": favorite_book_ids,
+        },
+    )
+
+
+@login_required
+def book_add(request):
+    if request.method == "POST":
+        form = BookForm(request.POST, request.FILES)
+        if form.is_valid():
+            book = form.save(commit=False)
+            book.uploaded_by = request.user
+            book.save()
+            messages.success(request, "Livre ajoute dans la librairie.")
+            return redirect("book_detail", slug=book.slug)
+    else:
+        form = BookForm()
+
+    return render(
+        request,
+        "nzassa_app/book_form.html",
+        {"form": form, "title": "Ajouter un livre", "submit_label": "Publier le livre"},
+    )
+
+
+@require_GET
+def book_detail(request, slug):
+    book = get_object_or_404(Book.objects.select_related("uploaded_by"), slug=slug, is_published=True)
+    related_books = Book.objects.filter(is_published=True, category=book.category).exclude(id=book.id)[:3]
+    is_favorite = request.user.is_authenticated and book.favorites.filter(id=request.user.id).exists()
+    return render(
+        request,
+        "nzassa_app/book_detail.html",
+        {"book": book, "related_books": related_books, "is_favorite": is_favorite},
+    )
+
+
+@require_GET
+@xframe_options_sameorigin
+def book_read(request, slug):
+    book = get_object_or_404(Book, slug=slug, is_published=True)
+    try:
+        return FileResponse(
+            book.pdf_file.open("rb"),
+            as_attachment=False,
+            content_type="application/pdf",
+        )
+    except FileNotFoundError as exc:
+        raise Http404("Fichier PDF introuvable.") from exc
+
+
+@require_GET
+def book_download(request, slug):
+    book = get_object_or_404(Book, slug=slug, is_published=True)
+    try:
+        return FileResponse(
+            book.pdf_file.open("rb"),
+            as_attachment=True,
+            filename=book.pdf_file.name.rsplit("/", 1)[-1],
+        )
+    except FileNotFoundError as exc:
+        raise Http404("Fichier PDF introuvable.") from exc
+
+
+@login_required
+@require_POST
+def book_favorite(request, slug):
+    book = get_object_or_404(Book.objects.select_related("uploaded_by"), slug=slug, is_published=True)
+    if book.favorites.filter(id=request.user.id).exists():
+        book.favorites.remove(request.user)
+        messages.info(request, "Livre retire des favoris.")
+    else:
+        book.favorites.add(request.user)
+        create_notification(
+            book.uploaded_by,
+            request.user,
+            "a ajoute votre livre en favori",
+            book.title,
+            reverse("book_detail", kwargs={"slug": book.slug}),
+        )
+        messages.success(request, "Livre ajoute a vos favoris.")
+    log_learning_event(request, "book_favorite", book.title, {"book_id": book.id})
+    return redirect_back(request, "book_detail", slug=book.slug)
+
+
+@require_GET
+def ethnicity_map(request):
+    ethnicities = (
+        Ethnicity.objects.select_related("language")
+        .annotate(story_count=Count("stories", distinct=True))
+        .order_by("name")
+    )
+    map_points = [
+        {
+            "name": ethnicity.name,
+            "slug": ethnicity.slug,
+            "language": ethnicity.language.name if ethnicity.language_id else "",
+            "region": ethnicity.region,
+            "description": ethnicity.description,
+            "traditions": ethnicity.traditions,
+            "latitude": float(ethnicity.latitude) if ethnicity.latitude is not None else None,
+            "longitude": float(ethnicity.longitude) if ethnicity.longitude is not None else None,
+            "color": ethnicity.map_color,
+            "story_count": ethnicity.story_count,
+        }
+        for ethnicity in ethnicities
+    ]
+    return render(
+        request,
+        "nzassa_app/ethnicity_map.html",
+        {
+            "ethnicities": ethnicities,
+            "map_points_json": json.dumps(map_points),
+        },
+    )
+
+
+@require_GET
+def audio_library(request):
+    query = request.GET.get("q", "").strip()
+    tracks = AudioTrack.objects.select_related("story", "lesson", "language")
+    if query:
+        tracks = tracks.filter(Q(title__icontains=query) | Q(transcript__icontains=query) | Q(language__name__icontains=query))
+    return render(
+        request,
+        "nzassa_app/audio_library.html",
+        {"tracks": tracks, "query": query},
+    )
+
+
+@login_required
+def audio_add(request):
+    if request.method == "POST":
+        form = AudioTrackForm(request.POST, request.FILES)
+        if form.is_valid():
+            track = form.save()
+            messages.success(request, "Audio ajoute au catalogue.")
+            log_learning_event(request, "audio_created", track.title, {"audio_id": track.id})
+            return redirect("audio_library")
+    else:
+        form = AudioTrackForm()
+    return render(
+        request,
+        "nzassa_app/simple_form.html",
+        {"form": form, "title": "Ajouter un audio", "submit_label": "Publier l'audio", "back_url": reverse("audio_library")},
+    )
+
+
+@require_GET
+def short_video_feed(request):
+    videos = ShortVideo.objects.filter(is_published=True).select_related("language", "author").prefetch_related("likes")
+    liked_video_ids = []
+    if request.user.is_authenticated:
+        liked_video_ids = list(request.user.liked_short_videos.values_list("id", flat=True))
+    return render(
+        request,
+        "nzassa_app/short_video_feed.html",
+        {"videos": videos, "liked_video_ids": liked_video_ids},
+    )
+
+
+@login_required
+def short_video_add(request):
+    if request.method == "POST":
+        form = ShortVideoForm(request.POST, request.FILES)
+        if form.is_valid():
+            video = form.save(commit=False)
+            video.author = request.user
+            video.save()
+            messages.success(request, "Mini-video publiee.")
+            return redirect("short_video_feed")
+    else:
+        form = ShortVideoForm()
+    return render(
+        request,
+        "nzassa_app/simple_form.html",
+        {"form": form, "title": "Ajouter une mini-video", "submit_label": "Publier", "back_url": reverse("short_video_feed")},
+    )
+
+
+@login_required
+@require_POST
+def short_video_like(request, slug):
+    video = get_object_or_404(ShortVideo.objects.select_related("author"), slug=slug, is_published=True)
+    if video.likes.filter(id=request.user.id).exists():
+        video.likes.remove(request.user)
+    else:
+        video.likes.add(request.user)
+        create_notification(
+            video.author,
+            request.user,
+            "a aime votre mini-video",
+            video.title,
+            reverse("short_video_feed"),
+        )
+    return redirect_back(request, "short_video_feed")
+
+
+@login_required
+def learning_groups(request):
+    groups = (
+        LearningGroup.objects.select_related("language", "owner")
+        .annotate(member_count=Count("memberships", distinct=True), post_count=Count("posts", distinct=True))
+    )
+    my_group_ids = list(request.user.learning_groups.values_list("id", flat=True))
+    return render(
+        request,
+        "nzassa_app/learning_groups.html",
+        {"groups": groups, "my_group_ids": my_group_ids},
+    )
+
+
+@login_required
+def group_create(request):
+    if request.method == "POST":
+        form = LearningGroupForm(request.POST)
+        if form.is_valid():
+            group = form.save(commit=False)
+            group.owner = request.user
+            group.save()
+            GroupMembership.objects.get_or_create(group=group, user=request.user, defaults={"role": "owner"})
+            messages.success(request, "Groupe cree.")
+            return redirect("group_detail", slug=group.slug)
+    else:
+        form = LearningGroupForm()
+    return render(
+        request,
+        "nzassa_app/simple_form.html",
+        {"form": form, "title": "Creer un groupe", "submit_label": "Creer le groupe", "back_url": reverse("learning_groups")},
+    )
+
+
+@login_required
+def group_detail(request, slug):
+    group = get_object_or_404(LearningGroup.objects.select_related("language", "owner"), slug=slug)
+    is_member = GroupMembership.objects.filter(group=group, user=request.user).exists()
+    if request.method == "POST" and is_member:
+        form = SocialPostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.group = group
+            post.save()
+            messages.success(request, "Publication ajoutee au groupe.")
+            return redirect("group_detail", slug=group.slug)
+    else:
+        form = SocialPostForm(initial={"group": group})
+
+    posts = (
+        group.posts.select_related("author")
+        .prefetch_related("comments", "comments__author", "likes")
+        .annotate(likes_total=Count("likes", distinct=True), comments_total=Count("comments", distinct=True))
+    )
+    return render(
+        request,
+        "nzassa_app/group_detail.html",
+        {"group": group, "is_member": is_member, "form": form, "posts": posts, "comment_form": SocialCommentForm()},
+    )
+
+
+@login_required
+@require_POST
+def group_join(request, slug):
+    group = get_object_or_404(LearningGroup, slug=slug)
+    GroupMembership.objects.get_or_create(group=group, user=request.user)
+    messages.success(request, "Vous avez rejoint le groupe.")
+    return redirect("group_detail", slug=group.slug)
+
+
+@login_required
+def messages_inbox(request):
+    inbox = PrivateMessage.objects.filter(recipient=request.user).select_related("sender", "recipient")
+    sent = PrivateMessage.objects.filter(sender=request.user).select_related("sender", "recipient")[:8]
+    if request.method == "POST":
+        form = PrivateMessageForm(request.POST, request.FILES)
+        if form.is_valid():
+            private_message = form.save(commit=False)
+            private_message.sender = request.user
+            private_message.save()
+            create_notification(
+                private_message.recipient,
+                request.user,
+                "vous a envoye un message",
+                private_message.body[:80],
+                reverse("messages_inbox"),
+            )
+            messages.success(request, "Message envoye.")
+            return redirect("messages_inbox")
+    else:
+        form = PrivateMessageForm()
+    return render(
+        request,
+        "nzassa_app/messages_inbox.html",
+        {"form": form, "inbox": inbox, "sent": sent},
+    )
+
+
+@login_required
+@require_POST
+def friend_request(request, username):
+    addressee = get_object_or_404(User, username=username, is_active=True)
+    if addressee == request.user:
+        messages.error(request, "Impossible de vous ajouter vous-meme.")
+    else:
+        FriendConnection.objects.get_or_create(requester=request.user, addressee=addressee)
+        create_notification(addressee, request.user, "vous a envoye une demande d'ami", "", reverse("notifications"))
+        messages.success(request, "Demande envoyee.")
+    return redirect_back(request, "discussion_profile", username=username)
+
+
+@login_required
+@require_POST
+def friend_accept(request, connection_id):
+    connection = get_object_or_404(FriendConnection, id=connection_id, addressee=request.user)
+    connection.status = "accepted"
+    connection.save(update_fields=["status", "updated_at"])
+    messages.success(request, "Demande acceptee.")
+    return redirect("notifications")
+
+
+@login_required
+def offline_center(request):
+    packs = OfflinePack.objects.filter(user=request.user).select_related("course", "story", "book", "audio")
+    downloadable = {
+        "courses": Course.objects.filter(is_published=True)[:6],
+        "stories": Story.objects.filter(is_published=True)[:6],
+        "books": Book.objects.filter(is_published=True)[:6],
+        "audio": AudioTrack.objects.filter(is_downloadable=True)[:6],
+    }
+    return render(
+        request,
+        "nzassa_app/offline_center.html",
+        {"packs": packs, "downloadable": downloadable},
+    )
+
+
+@login_required
+@require_POST
+def offline_add(request):
+    content_type = request.POST.get("content_type")
+    object_id = request.POST.get("object_id")
+    pack_kwargs = {"user": request.user, "status": "queued"}
+    label = "Pack offline"
+    if content_type == "course":
+        item = get_object_or_404(Course, id=object_id, is_published=True)
+        pack_kwargs["course"] = item
+        label = item.title
+    elif content_type == "story":
+        item = get_object_or_404(Story, id=object_id, is_published=True)
+        pack_kwargs["story"] = item
+        label = item.title
+    elif content_type == "book":
+        item = get_object_or_404(Book, id=object_id, is_published=True)
+        pack_kwargs["book"] = item
+        label = item.title
+    elif content_type == "audio":
+        item = get_object_or_404(AudioTrack, id=object_id, is_downloadable=True)
+        pack_kwargs["audio"] = item
+        label = item.title
+    else:
+        messages.error(request, "Contenu offline invalide.")
+        return redirect("offline_center")
+    OfflinePack.objects.create(**pack_kwargs)
+    log_learning_event(request, "offline_pack_queued", label, {"content_type": content_type, "object_id": object_id})
+    messages.success(request, "Contenu ajoute a la file offline.")
+    return redirect("offline_center")
+
+
+@login_required
+def teacher_dashboard(request):
+    owned_schools = School.objects.filter(Q(owner=request.user) | Q(memberships__user=request.user, memberships__role__in=["teacher", "admin"])).distinct()
+    teacher_courses = Course.objects.filter(is_published=True).annotate(
+        enrolled_count=Count("enrollments", distinct=True),
+        completed_count=Count("enrollments", filter=Q(enrollments__status="completed"), distinct=True),
+    )
+    recent_events = LearningEvent.objects.select_related("user")[:12]
+    return render(
+        request,
+        "nzassa_app/teacher_dashboard.html",
+        {
+            "owned_schools": owned_schools,
+            "teacher_courses": teacher_courses,
+            "recent_events": recent_events,
+        },
+    )
+
+
+@login_required
+def school_create(request):
+    if request.method == "POST":
+        form = SchoolForm(request.POST)
+        if form.is_valid():
+            school = form.save(commit=False)
+            school.owner = request.user
+            school.save()
+            SchoolMembership.objects.get_or_create(school=school, user=request.user, defaults={"role": "admin"})
+            messages.success(request, "Ecole ajoutee.")
+            return redirect("teacher_dashboard")
+    else:
+        form = SchoolForm()
+    return render(
+        request,
+        "nzassa_app/simple_form.html",
+        {"form": form, "title": "Ajouter une ecole", "submit_label": "Creer l'ecole", "back_url": reverse("teacher_dashboard")},
+    )
+
+
+@login_required
+@require_POST
+def certificate_issue(request, course_slug):
+    course = get_object_or_404(Course, slug=course_slug, is_published=True)
+    enrollment = get_object_or_404(Enrollment, user=request.user, course=course)
+    if enrollment.progress_percent < 80:
+        messages.error(request, "Le certificat est disponible a partir de 80% de progression.")
+        return redirect("course_detail", slug=course.slug)
+    certificate = Certificate.objects.create(
+        user=request.user,
+        course=course,
+        code=build_certificate_code(request.user, course),
+        level_label=course.level,
+        score=enrollment.progress_percent,
+    )
+    messages.success(request, "Certificat genere.")
+    return redirect("certificate_detail", code=certificate.code)
+
+
+@login_required
+@require_GET
+def certificate_detail(request, code):
+    certificate = get_object_or_404(Certificate.objects.select_related("user", "course"), code=code, user=request.user)
+    return render(request, "nzassa_app/certificate_detail.html", {"certificate": certificate})
+
+
+@login_required
+@require_GET
+def certificate_pdf(request, code):
+    certificate = get_object_or_404(Certificate.objects.select_related("user", "course"), code=code, user=request.user)
+    return HttpResponse(
+        build_simple_certificate_pdf(certificate),
+        content_type="application/pdf",
+        headers={"Content-Disposition": f'attachment; filename="{certificate.code}.pdf"'},
+    )
+
+
+@require_GET
+def games_hub(request):
+    games = EducationalGame.objects.filter(is_published=True).select_related("language")
+    fallback_game = build_landing_game_pack()
+    return render(
+        request,
+        "nzassa_app/games_hub.html",
+        {"games": games, "fallback_game": fallback_game},
+    )
+
+
+@login_required
+def micro_lessons(request):
+    if request.method == "POST":
+        form = MicroLessonSubscriptionForm(request.POST)
+        if form.is_valid():
+            subscription = form.save(commit=False)
+            subscription.user = request.user
+            subscription.save()
+            messages.success(request, "Micro-lecons activees.")
+            return redirect("micro_lessons")
+    else:
+        form = MicroLessonSubscriptionForm()
+    subscriptions = MicroLessonSubscription.objects.filter(user=request.user).select_related("language")
+    return render(
+        request,
+        "nzassa_app/micro_lessons.html",
+        {"form": form, "subscriptions": subscriptions},
+    )
+
+
+@login_required
+def mobile_money_payment(request):
+    if request.method == "POST":
+        form = MobileMoneyPaymentForm(request.POST)
+        if form.is_valid():
+            payment = form.save(commit=False)
+            payment.user = request.user
+            payment.reference = f"NZPAY-{request.user.id}-{get_random_string(8).upper()}"
+            payment.save()
+            messages.success(request, "Paiement Mobile Money initialise. Statut: en attente.")
+            return redirect("pricing")
+    else:
+        form = MobileMoneyPaymentForm(initial={"amount": 2500})
+    return render(
+        request,
+        "nzassa_app/simple_form.html",
+        {"form": form, "title": "Paiement Mobile Money", "submit_label": "Initialiser le paiement", "back_url": reverse("pricing")},
+    )
+
+
+@login_required
+def discussion_feed(request):
+    if request.method == "POST":
+        form = SocialPostForm(request.POST, request.FILES)
+        if form.is_valid():
+            post = form.save(commit=False)
+            post.author = request.user
+            post.save()
+            messages.success(request, "Publication ajoutee au fil d'actualite.")
+            return redirect("discussion_feed")
+    else:
+        form = SocialPostForm()
+
+    posts = (
+        SocialPost.objects.select_related("author")
+        .prefetch_related("likes", "comments", "comments__author")
+        .annotate(likes_total=Count("likes", distinct=True), comments_total=Count("comments", distinct=True))
+    )
+    liked_post_ids = list(request.user.liked_social_posts.values_list("id", flat=True))
+    community_stats = {
+        "members": User.objects.filter(is_active=True).count(),
+        "posts": SocialPost.objects.count(),
+        "comments": SocialPost.objects.aggregate(total=Count("comments"))["total"] or 0,
+    }
+    unread_notifications = get_unread_notifications(request.user)
+
+    return render(
+        request,
+        "nzassa_app/discussion_feed.html",
+        {
+            "form": form,
+            "comment_form": SocialCommentForm(),
+            "posts": posts,
+            "liked_post_ids": liked_post_ids,
+            "unread_notifications": unread_notifications,
+            "community_stats": community_stats,
+        },
+    )
+
+
+@login_required
+@require_POST
+def post_like(request, post_id):
+    post = get_object_or_404(SocialPost.objects.select_related("author"), id=post_id)
+    if post.likes.filter(id=request.user.id).exists():
+        post.likes.remove(request.user)
+        messages.info(request, "Like retire.")
+    else:
+        post.likes.add(request.user)
+        create_notification(
+            post.author,
+            request.user,
+            "a aime votre publication",
+            post.content[:80],
+            reverse("discussion_feed"),
+        )
+        messages.success(request, "Publication aimee.")
+    return redirect_back(request, "discussion_feed")
+
+
+@login_required
+@require_POST
+def post_comment(request, post_id):
+    post = get_object_or_404(SocialPost.objects.select_related("author"), id=post_id)
+    form = SocialCommentForm(request.POST)
+    if form.is_valid():
+        comment = form.save(commit=False)
+        comment.post = post
+        comment.author = request.user
+        comment.save()
+        create_notification(
+            post.author,
+            request.user,
+            "a commente votre publication",
+            post.content[:80],
+            reverse("discussion_feed"),
+        )
+        messages.success(request, "Commentaire ajoute.")
+    else:
+        messages.error(request, "Le commentaire est vide ou invalide.")
+    return redirect_back(request, "discussion_feed")
+
+
+@login_required
+@require_GET
+def discussion_profile(request, username):
+    profile_user = get_object_or_404(User, username=username, is_active=True)
+    user_profile = UserProfile.objects.filter(user=profile_user).select_related("selected_language").first()
+    posts = (
+        SocialPost.objects.filter(author=profile_user)
+        .prefetch_related("likes", "comments")
+        .annotate(likes_total=Count("likes", distinct=True), comments_total=Count("comments", distinct=True))
+    )
+    stats = {
+        "posts": posts.count(),
+        "comments": sum(post.comments_total for post in posts),
+        "likes": sum(post.likes_total for post in posts),
+    }
+    return render(
+        request,
+        "nzassa_app/discussion_profile.html",
+        {
+            "profile_user": profile_user,
+            "user_profile": user_profile,
+            "posts": posts,
+            "stats": stats,
+        },
+    )
+
+
+@login_required
+def notifications_center(request):
+    if request.method == "POST":
+        Notification.objects.filter(recipient=request.user, is_read=False).update(is_read=True)
+        messages.success(request, "Notifications marquees comme lues.")
+        return redirect("notifications")
+
+    notifications = Notification.objects.filter(recipient=request.user).select_related("actor")
+    return render(request, "nzassa_app/notifications.html", {"notifications": notifications})
+
+
+def build_ai_content_recommendations(prompt, selected_language=None, mode="chat"):
+    words = normalize_words(prompt)[:6]
+
+    story_filter = Q(is_published=True)
+    book_filter = Q(is_published=True)
+    if selected_language:
+        story_filter &= Q(ethnicity__name__icontains=selected_language.name) | Q(description__icontains=selected_language.name)
+        book_filter &= Q(description__icontains=selected_language.name) | Q(title__icontains=selected_language.name)
+
+    if words:
+        story_terms = Q()
+        book_terms = Q()
+        for word in words:
+            story_terms |= (
+                Q(title__icontains=word)
+                | Q(description__icontains=word)
+                | Q(location__icontains=word)
+                | Q(ethnicity__name__icontains=word)
+            )
+            book_terms |= Q(title__icontains=word) | Q(description__icontains=word) | Q(author_name__icontains=word)
+        story_filter &= story_terms
+        book_filter &= book_terms
+
+    stories = list(Story.objects.filter(story_filter).select_related("ethnicity")[:3])
+    books = list(Book.objects.filter(book_filter)[:3])
+
+    if not stories:
+        stories = list(Story.objects.filter(is_published=True).select_related("ethnicity")[:3])
+    if not books:
+        category_map = {"language": "language", "culture": "culture", "quiz": "tale"}
+        preferred_category = category_map.get(mode)
+        fallback_books = Book.objects.filter(is_published=True)
+        if preferred_category:
+            fallback_books = fallback_books.filter(category=preferred_category)
+        books = list(fallback_books[:3])
+        if not books:
+            books = list(Book.objects.filter(is_published=True)[:3])
+
+    courses = Course.objects.filter(is_published=True).select_related("language")
+    if selected_language:
+        courses = courses.filter(language=selected_language)
+    return {
+        "stories": stories,
+        "books": books,
+        "courses": list(courses[:3]),
+    }
+
+
+def cultural_ai(request):
+    profile = None
+    initial = {"mode": "chat", "level": "beginner"}
+    selected_language = None
+    if request.user.is_authenticated:
+        profile = get_or_create_profile(request.user)
+        selected_language = profile.selected_language
+        initial["target_language"] = selected_language
+        initial["level"] = profile.level
+
+    form = CulturalAIForm(request.POST or None, initial=initial)
+    ai_result = None
+    recommendations = build_ai_content_recommendations("", selected_language=selected_language)
+    remote_ai_status = get_remote_ai_status()
+
+    if request.method == "POST" and form.is_valid():
+        selected_language = form.cleaned_data["target_language"] or selected_language
+        level = form.cleaned_data["level"]
+        mode = form.cleaned_data["mode"]
+        prompt = form.cleaned_data["prompt"]
+        enriched_prompt = (
+            f"Niveau apprenant: {level}. Mode demande: {mode}. "
+            f"Reponds simplement, propose une activite concrete, puis une suggestion de lecture ou d'histoire. "
+            f"Demande: {prompt}"
+        )
+        conversation = get_or_create_conversation(request, selected_language=selected_language, channel="coach")
+        ai_result = chat_with_coach(conversation, enriched_prompt, selected_language=selected_language)
+        if ai_result.get("error"):
+            messages.error(request, ai_result["error"])
+            ai_result = None
+        recommendations = build_ai_content_recommendations(prompt, selected_language=selected_language, mode=mode)
+
+    return render(
+        request,
+        "nzassa_app/cultural_ai.html",
+        {
+            "form": form,
+            "ai_result": ai_result,
+            "profile": profile,
+            "recommendations": recommendations,
+            "remote_ai_status": remote_ai_status,
         },
     )
 

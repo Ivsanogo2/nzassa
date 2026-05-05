@@ -1,0 +1,27 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Certificat | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .cert-wrap{display:grid;gap:22px}.certificate{padding:44px;border-radius:8px;border:2px solid rgba(21,94,75,.22);background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(247,239,226,.88));box-shadow:0 22px 56px rgba(16,24,23,.14);text-align:center}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:42px;padding:10px 16px;text-decoration:none}.actions{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+</style>
+
+<div class="cert-wrap">
+    <section class="certificate">
+        <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.08em;">Nzassa School</p>
+        <h1 style="font-size:2.6rem;margin:0 0 12px;">Certificat de progression</h1>
+        <p>Attribue a</p>
+        <h2 style="font-size:2rem;">{{ certificate.user.get_full_name|default:certificate.user.username }}</h2>
+        <p>pour le parcours</p>
+        <h3>{{ certificate.course.title|default:"Parcours Nzassa" }}</h3>
+        <p>Niveau: <strong>{{ certificate.level_label }}</strong> - Score: <strong>{{ certificate.score }}%</strong></p>
+        <p>Code verifiable: <strong>{{ certificate.code }}</strong></p>
+        <p>{{ certificate.issued_at|date:"d M Y" }}</p>
+        <div class="actions">
+            <a class="btn" href="{% url 'certificate_pdf' certificate.code %}">Telecharger PDF</a>
+            {% if certificate.course %}<a class="btn" href="{% url 'course_detail' certificate.course.slug %}">Retour au parcours</a>{% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

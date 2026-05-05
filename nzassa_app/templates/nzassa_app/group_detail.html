@@ -1,0 +1,59 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}{{ group.name }} | Groupes{% endblock %}
+
+{% block content %}
+<style>
+    .layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;align-items:start}.panel,.post{padding:24px;border-radius:8px;border:1px solid rgba(16,24,23,.1);background:rgba(255,255,255,.82);box-shadow:0 16px 36px rgba(16,24,23,.08)}.main{display:grid;gap:16px}.btn{border:0;border-radius:999px;background:linear-gradient(135deg,var(--forest),#2f936b);color:white;display:inline-flex;align-items:center;justify-content:center;font:inherit;font-weight:800;min-height:40px;padding:9px 15px;text-decoration:none}.btn.secondary{background:rgba(8,48,77,.08);color:var(--lagoon)}textarea,input,select{width:100%;border:1px solid rgba(16,24,23,.12);border-radius:14px;font:inherit;padding:12px}.post img{max-width:100%;border-radius:8px;margin-top:10px}@media(max-width:900px){.layout{grid-template-columns:1fr}}
+</style>
+
+<div class="layout">
+    <main class="main">
+        <section class="panel">
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:.06em;">Groupe</p>
+            <h1 style="margin:0 0 8px;font-size:2.3rem;">{{ group.name }}</h1>
+            <p style="line-height:1.75;">{{ group.description|default:"Un espace pour pratiquer ensemble." }}</p>
+            {% if group.language %}<p><strong>Langue:</strong> {{ group.language.name }}</p>{% endif %}
+            {% if not is_member %}
+                <form method="post" action="{% url 'group_join' group.slug %}">
+                    {% csrf_token %}
+                    <button class="btn" type="submit">Rejoindre le groupe</button>
+                </form>
+            {% endif %}
+        </section>
+
+        {% if is_member %}
+            <section class="panel">
+                <h2 style="margin-top:0;">Publier dans le groupe</h2>
+                <form method="post" enctype="multipart/form-data" style="display:grid;gap:12px;">
+                    {% csrf_token %}
+                    {{ form.content }}
+                    {{ form.image }}
+                    <button class="btn" type="submit">Publier</button>
+                </form>
+            </section>
+        {% endif %}
+
+        {% for post in posts %}
+            <article class="post">
+                <strong>{{ post.author.get_full_name|default:post.author.username }}</strong>
+                <span style="color:rgba(16,24,23,.58);">- {{ post.created_at|date:"d M Y H:i" }}</span>
+                <div style="line-height:1.75;">{{ post.content|linebreaks }}</div>
+                {% if post.image %}<img src="{{ post.image.url }}" alt="Image de publication">{% endif %}
+                <p>{{ post.likes_total }} like{{ post.likes_total|pluralize }} - {{ post.comments_total }} commentaire{{ post.comments_total|pluralize }}</p>
+            </article>
+        {% empty %}
+            <section class="post">
+                <h2 style="margin-top:0;">Aucune publication</h2>
+                <p>Le groupe est pret pour ses premiers echanges.</p>
+            </section>
+        {% endfor %}
+    </main>
+    <aside class="panel">
+        <h2 style="margin-top:0;">Actions</h2>
+        <p><a class="btn secondary" href="{% url 'learning_groups' %}">Tous les groupes</a></p>
+        <p><a class="btn secondary" href="{% url 'discussion_feed' %}">Fil general</a></p>
+        <p><a class="btn secondary" href="{% url 'messages_inbox' %}">Messages prives</a></p>
+    </aside>
+</div>
+{% endblock %}

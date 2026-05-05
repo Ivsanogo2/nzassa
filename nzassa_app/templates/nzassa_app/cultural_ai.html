@@ -1,0 +1,290 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Assistant culturel | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .ai-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(320px, 0.65fr);
+        gap: 22px;
+        align-items: start;
+    }
+
+    .ai-main,
+    .ai-side {
+        display: grid;
+        gap: 18px;
+    }
+
+    .ai-hero,
+    .ai-form,
+    .ai-result,
+    .side-panel {
+        border: 1px solid rgba(16, 24, 23, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 16px 36px rgba(16, 24, 23, 0.08);
+        padding: 24px;
+    }
+
+    .ai-hero h1 {
+        margin: 0 0 8px;
+        font-size: 2.35rem;
+        line-height: 1.1;
+    }
+
+    .ai-form {
+        display: grid;
+        gap: 16px;
+    }
+
+    .field-group {
+        display: grid;
+        gap: 8px;
+    }
+
+    .field-group label {
+        font-weight: 900;
+        color: rgba(16, 24, 23, 0.74);
+    }
+
+    .field-group input,
+    .field-group textarea,
+    .field-group select {
+        width: 100%;
+        border: 1px solid rgba(16, 24, 23, 0.12);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.94);
+        color: var(--ink);
+        font: inherit;
+        padding: 12px;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .action-link {
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--forest), #2f936b);
+        color: white;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: inherit;
+        font-weight: 800;
+        min-height: 44px;
+        padding: 10px 18px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .action-link.secondary {
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+    }
+
+    .pill-row,
+    .recommend-grid {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .pill {
+        display: inline-flex;
+        min-height: 32px;
+        align-items: center;
+        padding: 7px 11px;
+        border-radius: 999px;
+        background: rgba(21, 94, 75, 0.1);
+        color: var(--forest);
+        font-size: 0.82rem;
+        font-weight: 900;
+    }
+
+    .activity-box,
+    .recommend-item,
+    .word-card {
+        padding: 14px;
+        border-radius: 8px;
+        background: rgba(247, 239, 226, 0.74);
+    }
+
+    .word-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .recommend-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    @media (max-width: 980px) {
+        .ai-layout,
+        .form-grid,
+        .word-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<div class="ai-layout">
+    <main class="ai-main">
+        <section class="ai-hero">
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:0.06em;">Coach intelligent</p>
+            <h1>Assistant culturel et linguistique</h1>
+            <p style="line-height:1.75;margin-bottom:0;">
+                Discutez en francais ou autour des langues locales, demandez une aide de prononciation, une explication culturelle, un quiz ou une activite courte.
+            </p>
+        </section>
+
+        <form class="ai-form" method="post">
+            {% csrf_token %}
+            {{ form.non_field_errors }}
+            <div class="field-group">
+                <label for="{{ form.prompt.id_for_label }}">{{ form.prompt.label }}</label>
+                {{ form.prompt }}
+                {{ form.prompt.errors }}
+            </div>
+            <div class="form-grid">
+                <div class="field-group">
+                    <label for="{{ form.target_language.id_for_label }}">{{ form.target_language.label }}</label>
+                    {{ form.target_language }}
+                </div>
+                <div class="field-group">
+                    <label for="{{ form.level.id_for_label }}">{{ form.level.label }}</label>
+                    {{ form.level }}
+                </div>
+                <div class="field-group">
+                    <label for="{{ form.mode.id_for_label }}">{{ form.mode.label }}</label>
+                    {{ form.mode }}
+                </div>
+            </div>
+            <button class="action-link" type="submit">Demander a l'IA</button>
+        </form>
+
+        {% if ai_result %}
+            <section class="ai-result">
+                <div class="pill-row">
+                    <span class="pill">{{ ai_result.provider_label|default:"Mode local intelligent" }}</span>
+                    {% for intent in ai_result.intent_labels %}
+                        <span class="pill">{{ intent }}</span>
+                    {% endfor %}
+                </div>
+                <h2>Reponse du coach</h2>
+                <div style="line-height:1.8;">{{ ai_result.reply|linebreaks }}</div>
+
+                {% if ai_result.learning_activity %}
+                    <div class="activity-box">
+                        <h3 style="margin-top:0;">{{ ai_result.learning_activity.title }}</h3>
+                        <p>{{ ai_result.learning_activity.subtitle }}</p>
+                        {% if ai_result.learning_activity.prompt %}<p><strong>Consigne:</strong> {{ ai_result.learning_activity.prompt }}</p>{% endif %}
+                        {% if ai_result.learning_activity.steps %}
+                            <ol style="line-height:1.75;">
+                                {% for step in ai_result.learning_activity.steps %}
+                                    <li>{{ step }}</li>
+                                {% endfor %}
+                            </ol>
+                        {% endif %}
+                    </div>
+                {% endif %}
+
+                {% if ai_result.pronunciation_cards %}
+                    <h3>Mots a pratiquer</h3>
+                    <div class="word-grid">
+                        {% for card in ai_result.pronunciation_cards %}
+                            <div class="word-card">
+                                <strong>{{ card.word }}</strong>
+                                <p style="margin:6px 0;">{{ card.origin }}</p>
+                                <small>{{ card.language }} - {{ card.pronunciation_tip }}</small>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </section>
+        {% endif %}
+    </main>
+
+    <aside class="ai-side">
+        <section class="side-panel">
+            <h2 style="margin-top:0;">Etat IA</h2>
+            <p style="line-height:1.7;">
+                Mode actif: <strong>{{ remote_ai_status.label }}</strong>
+                {% if remote_ai_status.model %}<br>Modele: {{ remote_ai_status.model }}{% endif %}
+            </p>
+            {% if profile %}
+                <p>Niveau sauvegarde: <strong>{{ profile.get_level_display }}</strong></p>
+                {% if profile.selected_language %}<p>Langue preferee: <strong>{{ profile.selected_language.name }}</strong></p>{% endif %}
+            {% endif %}
+        </section>
+
+        <section class="side-panel">
+            <h2 style="margin-top:0;">Suggestions rapides</h2>
+            <div class="recommend-list">
+                {% if ai_result %}
+                    {% for suggestion in ai_result.suggestions %}
+                        <form method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="prompt" value="{{ suggestion }}">
+                            <input type="hidden" name="mode" value="chat">
+                            <input type="hidden" name="level" value="{{ form.level.value|default:'beginner' }}">
+                            <button class="action-link secondary" type="submit">{{ suggestion }}</button>
+                        </form>
+                    {% endfor %}
+                {% else %}
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="prompt" value="Propose un mini-jeu pour apprendre une salutation baoule">
+                        <input type="hidden" name="mode" value="quiz">
+                        <input type="hidden" name="level" value="beginner">
+                        <button class="action-link secondary" type="submit">Mini-jeu baoule</button>
+                    </form>
+                    <form method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="prompt" value="Explique une tradition ivoirienne en mots simples">
+                        <input type="hidden" name="mode" value="culture">
+                        <input type="hidden" name="level" value="beginner">
+                        <button class="action-link secondary" type="submit">Question culturelle</button>
+                    </form>
+                {% endif %}
+            </div>
+        </section>
+
+        <section class="side-panel">
+            <h2 style="margin-top:0;">Recommandations</h2>
+            <div class="recommend-list">
+                {% for story in recommendations.stories %}
+                    <a class="recommend-item" href="{% url 'story_detail' story.slug %}">
+                        <strong>Histoire: {{ story.title }}</strong>
+                        {% if story.ethnicity %}<br><small>{{ story.ethnicity.name }}</small>{% endif %}
+                    </a>
+                {% endfor %}
+                {% for book in recommendations.books %}
+                    <a class="recommend-item" href="{% url 'book_detail' book.slug %}">
+                        <strong>Livre: {{ book.title }}</strong>
+                        <br><small>{{ book.get_category_display }}</small>
+                    </a>
+                {% endfor %}
+                {% for course in recommendations.courses %}
+                    <a class="recommend-item" href="{% url 'course_detail' course.slug %}">
+                        <strong>Parcours: {{ course.title }}</strong>
+                        <br><small>{{ course.language.name }}</small>
+                    </a>
+                {% empty %}
+                    {% if not recommendations.stories and not recommendations.books %}
+                        <div class="recommend-item">Ajoutez des histoires et livres pour enrichir les suggestions.</div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        </section>
+    </aside>
+</div>
+{% endblock %}

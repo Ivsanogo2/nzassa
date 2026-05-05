@@ -1,0 +1,102 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}{{ title }} | Librairie{% endblock %}
+
+{% block content %}
+<style>
+    .form-shell {
+        display: grid;
+        gap: 22px;
+    }
+
+    .form-hero,
+    .content-form {
+        padding: 30px;
+    }
+
+    .content-form {
+        display: grid;
+        gap: 18px;
+    }
+
+    .field-group {
+        display: grid;
+        gap: 8px;
+    }
+
+    .field-group label {
+        font-weight: 900;
+        color: rgba(16, 24, 23, 0.74);
+    }
+
+    .field-group input,
+    .field-group textarea,
+    .field-group select {
+        width: 100%;
+        border: 1px solid rgba(16, 24, 23, 0.12);
+        border-radius: 14px;
+        background: rgba(255, 255, 255, 0.92);
+        color: var(--ink);
+        font: inherit;
+        padding: 12px;
+    }
+
+    .errorlist {
+        margin: 0;
+        padding-left: 18px;
+        color: #9f2d20;
+        font-weight: 800;
+    }
+
+    .submit-row {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .action-link {
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--forest), #2f936b);
+        color: white;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: inherit;
+        font-weight: 800;
+        min-height: 44px;
+        padding: 10px 18px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .action-link.secondary {
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+    }
+</style>
+
+<div class="form-shell">
+    <section class="surface-card form-hero">
+        <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:0.06em;">Bibliotheque numerique</p>
+        <h1 style="margin-bottom:0;">{{ title }}</h1>
+    </section>
+
+    <form class="surface-card content-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ form.non_field_errors }}
+        {% for field in form %}
+            <div class="field-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {{ field.errors }}
+            </div>
+        {% endfor %}
+        <div class="submit-row">
+            <button class="action-link" type="submit">{{ submit_label }}</button>
+            <a class="action-link secondary" href="{% url 'library' %}">Annuler</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

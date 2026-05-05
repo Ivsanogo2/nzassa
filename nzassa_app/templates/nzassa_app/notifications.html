@@ -1,0 +1,105 @@
+{% extends "nzassa_app/base.html" %}
+
+{% block title %}Notifications | Nzassa School{% endblock %}
+
+{% block content %}
+<style>
+    .notification-stack {
+        display: grid;
+        gap: 20px;
+    }
+
+    .notification-hero,
+    .notification-item {
+        border: 1px solid rgba(16, 24, 23, 0.1);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.82);
+        box-shadow: 0 16px 36px rgba(16, 24, 23, 0.08);
+        padding: 22px;
+    }
+
+    .notification-hero {
+        display: flex;
+        gap: 16px;
+        align-items: end;
+        justify-content: space-between;
+        flex-wrap: wrap;
+    }
+
+    .notification-hero h1 {
+        margin: 0 0 8px;
+        font-size: 2.2rem;
+    }
+
+    .notification-list {
+        display: grid;
+        gap: 12px;
+    }
+
+    .notification-item {
+        display: grid;
+        gap: 8px;
+        text-decoration: none;
+    }
+
+    .notification-item.unread {
+        border-color: rgba(21, 94, 75, 0.28);
+        background: rgba(21, 94, 75, 0.1);
+    }
+
+    .action-link {
+        border: none;
+        border-radius: 999px;
+        background: linear-gradient(135deg, var(--forest), #2f936b);
+        color: white;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font: inherit;
+        font-weight: 800;
+        min-height: 42px;
+        padding: 10px 16px;
+        text-decoration: none;
+        white-space: nowrap;
+    }
+
+    .action-link.secondary {
+        background: rgba(8, 48, 77, 0.08);
+        color: var(--lagoon);
+    }
+</style>
+
+<div class="notification-stack">
+    <section class="notification-hero">
+        <div>
+            <p style="margin-top:0;color:var(--forest);font-weight:900;text-transform:uppercase;letter-spacing:0.06em;">Centre social</p>
+            <h1>Notifications</h1>
+            <p style="margin-bottom:0;">Likes, commentaires et activite recente autour de vos contenus.</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <button class="action-link" type="submit">Tout marquer comme lu</button>
+        </form>
+    </section>
+
+    <div class="notification-list">
+        {% for notification in notifications %}
+            <a class="notification-item {% if not notification.is_read %}unread{% endif %}" href="{{ notification.target_url|default:'#' }}">
+                <strong>
+                    {{ notification.actor.get_full_name|default:notification.actor.username|default:"Nzassa" }}
+                    {{ notification.verb }}
+                </strong>
+                {% if notification.target_label %}<span>{{ notification.target_label }}</span>{% endif %}
+                <small>{{ notification.created_at|date:"d M Y H:i" }}</small>
+            </a>
+        {% empty %}
+            <section class="notification-item">
+                <h2 style="margin-top:0;">Aucune notification</h2>
+                <p>Les interactions avec vos histoires et publications apparaitront ici.</p>
+                <p style="margin-bottom:0;"><a class="action-link secondary" href="{% url 'discussion_feed' %}">Ouvrir la discussion</a></p>
+            </section>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

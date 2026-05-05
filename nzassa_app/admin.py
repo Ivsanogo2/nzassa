@@ -1,20 +1,41 @@
 from django.contrib import admin
 
 from .models import (
+    AudioTrack,
     Badge,
     CoachConversation,
     CoachMessage,
     Course,
     CulturalExperience,
     Enrollment,
+    Ethnicity,
     Language,
     Lesson,
     LearnedWord,
     LessonProgress,
+    LearningEvent,
+    LearningGroup,
+    MicroLessonSubscription,
+    MobileMoneyPayment,
     Module,
+    Notification,
+    OfflinePack,
+    PrivateMessage,
     PronunciationAttempt,
     QuizAttempt,
     QuizQuestion,
+    Book,
+    Certificate,
+    EducationalGame,
+    FriendConnection,
+    GroupMembership,
+    School,
+    SchoolMembership,
+    ShortVideo,
+    SocialComment,
+    SocialPost,
+    Story,
+    StoryComment,
     Traduction,
     UserBadge,
     UserProfile,
@@ -109,6 +130,158 @@ class CulturalExperienceAdmin(admin.ModelAdmin):
     list_filter = ("experience_type", "is_premium")
     search_fields = ("title", "description")
     prepopulated_fields = {"slug": ("title",)}
+
+
+@admin.register(Ethnicity)
+class EthnicityAdmin(admin.ModelAdmin):
+    list_display = ("name", "language", "region", "latitude", "longitude", "created_at")
+    search_fields = ("name", "region", "description", "traditions")
+    list_filter = ("language",)
+    prepopulated_fields = {"slug": ("name",)}
+
+
+class StoryCommentInline(admin.TabularInline):
+    model = StoryComment
+    extra = 0
+    readonly_fields = ("author", "created_at")
+
+
+@admin.register(Story)
+class StoryAdmin(admin.ModelAdmin):
+    list_display = ("title", "ethnicity", "location", "author", "is_published", "created_at")
+    list_filter = ("is_published", "ethnicity", "location")
+    search_fields = ("title", "description", "location", "ethnicity__name")
+    prepopulated_fields = {"slug": ("title",)}
+    inlines = [StoryCommentInline]
+
+
+@admin.register(Book)
+class BookAdmin(admin.ModelAdmin):
+    list_display = ("title", "author_name", "category", "uploaded_by", "is_published", "created_at")
+    list_filter = ("category", "is_published")
+    search_fields = ("title", "author_name", "description")
+    prepopulated_fields = {"slug": ("title",)}
+
+
+@admin.register(AudioTrack)
+class AudioTrackAdmin(admin.ModelAdmin):
+    list_display = ("title", "language", "story", "lesson", "is_downloadable", "created_at")
+    list_filter = ("language", "is_downloadable")
+    search_fields = ("title", "transcript", "story__title", "lesson__title")
+    prepopulated_fields = {"slug": ("title",)}
+
+
+@admin.register(ShortVideo)
+class ShortVideoAdmin(admin.ModelAdmin):
+    list_display = ("title", "language", "author", "is_published", "created_at")
+    list_filter = ("language", "is_published")
+    search_fields = ("title", "caption")
+    prepopulated_fields = {"slug": ("title",)}
+
+
+class GroupMembershipInline(admin.TabularInline):
+    model = GroupMembership
+    extra = 0
+
+
+@admin.register(LearningGroup)
+class LearningGroupAdmin(admin.ModelAdmin):
+    list_display = ("name", "language", "owner", "is_public", "created_at")
+    list_filter = ("language", "is_public")
+    search_fields = ("name", "description")
+    prepopulated_fields = {"slug": ("name",)}
+    inlines = [GroupMembershipInline]
+
+
+@admin.register(FriendConnection)
+class FriendConnectionAdmin(admin.ModelAdmin):
+    list_display = ("requester", "addressee", "status", "updated_at")
+    list_filter = ("status",)
+    search_fields = ("requester__username", "addressee__username")
+
+
+@admin.register(PrivateMessage)
+class PrivateMessageAdmin(admin.ModelAdmin):
+    list_display = ("sender", "recipient", "is_read", "created_at")
+    list_filter = ("is_read",)
+    search_fields = ("sender__username", "recipient__username", "body")
+
+
+class SchoolMembershipInline(admin.TabularInline):
+    model = SchoolMembership
+    extra = 0
+
+
+@admin.register(School)
+class SchoolAdmin(admin.ModelAdmin):
+    list_display = ("name", "city", "owner", "invite_code", "is_active", "created_at")
+    list_filter = ("is_active", "city")
+    search_fields = ("name", "city", "invite_code")
+    prepopulated_fields = {"slug": ("name",)}
+    inlines = [SchoolMembershipInline]
+
+
+@admin.register(Certificate)
+class CertificateAdmin(admin.ModelAdmin):
+    list_display = ("user", "course", "level_label", "score", "code", "issued_at")
+    search_fields = ("user__username", "course__title", "code")
+
+
+@admin.register(EducationalGame)
+class EducationalGameAdmin(admin.ModelAdmin):
+    list_display = ("title", "game_type", "language", "xp_reward", "is_published")
+    list_filter = ("game_type", "language", "is_published")
+    search_fields = ("title",)
+    prepopulated_fields = {"slug": ("title",)}
+
+
+@admin.register(OfflinePack)
+class OfflinePackAdmin(admin.ModelAdmin):
+    list_display = ("user", "course", "story", "book", "audio", "status", "created_at")
+    list_filter = ("status",)
+    search_fields = ("user__username", "course__title", "story__title", "book__title", "audio__title")
+
+
+@admin.register(MicroLessonSubscription)
+class MicroLessonSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("user", "channel", "phone_number", "language", "is_active", "created_at")
+    list_filter = ("channel", "is_active", "language")
+    search_fields = ("user__username", "phone_number")
+
+
+@admin.register(MobileMoneyPayment)
+class MobileMoneyPaymentAdmin(admin.ModelAdmin):
+    list_display = ("user", "provider", "amount", "reference", "status", "created_at")
+    list_filter = ("provider", "status")
+    search_fields = ("user__username", "phone_number", "reference")
+
+
+@admin.register(LearningEvent)
+class LearningEventAdmin(admin.ModelAdmin):
+    list_display = ("user", "event_type", "object_label", "created_at")
+    list_filter = ("event_type",)
+    search_fields = ("user__username", "event_type", "object_label")
+
+
+class SocialCommentInline(admin.TabularInline):
+    model = SocialComment
+    extra = 0
+    readonly_fields = ("author", "created_at")
+
+
+@admin.register(SocialPost)
+class SocialPostAdmin(admin.ModelAdmin):
+    list_display = ("author", "group", "created_at", "updated_at")
+    list_filter = ("group",)
+    search_fields = ("author__username", "content", "group__name")
+    inlines = [SocialCommentInline]
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ("recipient", "actor", "verb", "target_label", "is_read", "created_at")
+    list_filter = ("is_read", "created_at")
+    search_fields = ("recipient__username", "actor__username", "verb", "target_label")
 
 
 @admin.register(CoachConversation)
